@@ -3,77 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="SwipeIron - Professional heavy equipment spec comparison. Swipe. Compare. Decide.">
     <title>SwipeIron | Swipe. Compare. Decide.</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;family=Space+Grotesk:wght@500;600&amp;display=swap');
-        :root { --orange: #f97316; }
-        body { font-family: 'Inter', system_ui, sans-serif; }
-        .font-display { font-family: 'Space Grotesk', 'Inter', sans-serif; font-weight: 600; }
-        .equipment-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .equipment-card:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgb(15 23 42 / 0.1); }
-        .nav-active { color: #f97316; font-weight: 600; }
-        .section-header { font-size: 2.25rem; line-height: 2.5rem; font-weight: 700; letter-spacing: -0.025em; }
+        body { font-family: system-ui, -apple-system, sans-serif; }
+        .equipment-card { transition: all 0.2s; }
+        .equipment-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-200">
 
     <!-- NAV -->
     <nav class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <div class="w-9 h-9 bg-[#f97316] rounded flex items-center justify-center text-white font-bold text-2xl">S</div>
-                <div class="text-3xl font-semibold tracking-tight">SwipeIron</div>
+                <div class="text-2xl font-semibold">SwipeIron</div>
             </div>
-            <div class="hidden md:flex items-center gap-8 text-base font-medium">
-                <a href="#" onclick="showPage('home')" class="nav-link hover:text-[#f97316]">Home</a>
-                <a href="#" onclick="showPage('brands')" class="nav-link hover:text-[#f97316]">Brands</a>
-                <a href="#" onclick="showPage('models')" class="nav-link hover:text-[#f97316]">All Models</a>
-                <a href="#" onclick="showPage('compare')" class="nav-link hover:text-[#f97316]">Compare</a>
+            <div class="flex gap-6 text-sm font-medium">
+                <a href="#" onclick="showPage('home')" class="hover:text-[#f97316]">Home</a>
+                <a href="#" onclick="showPage('brands')" class="hover:text-[#f97316]">Brands</a>
+                <a href="#" onclick="showPage('models')" class="hover:text-[#f97316]">All Models</a>
+                <a href="#" onclick="showPage('compare')" class="hover:text-[#f97316]">Compare</a>
             </div>
-            <div class="text-[#f97316] font-semibold text-lg">Swipe. Compare. Decide.</div>
+            <div class="text-[#f97316] font-semibold text-sm">Swipe. Compare. Decide.</div>
         </div>
     </nav>
 
-    <div id="page-content" class="max-w-7xl mx-auto px-6 py-8"></div>
+    <div id="page-content" class="max-w-6xl mx-auto px-6 py-8"></div>
 
     <script>
-        // ==================== SUPABASE CONFIG ====================
         const SUPABASE_URL = 'https://kffjahvpapxekbjfhinm.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtmZmphaHZwYXB4ZWtiamZoaW5tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NjUxMDMsImV4cCI6MjA4OTQ0MTEwM30.EZkCFq0y6Mr9Rt5rn51khbif4aK_cd6ACE-6qw9MZgU';
         
         const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        
-        let equipmentDatabase = [];
+        let models = [];
         let compareList = [];
-        let currentPage = 'home';
 
-        // ==================== LOAD DATA FROM SUPABASE ====================
-        async function loadModels() {
-            const { data, error } = await supabase
-                .from('equipment_models')
-                .select('*')
-                .order('brand', { ascending: true });
-            
+        async function loadData() {
+            const { data, error } = await supabase.from('equipment_models').select('*');
             if (error) {
-                console.error('Error loading models:', error);
-                alert('Error loading data from database. Please check console.');
+                console.error('Supabase error:', error);
+                document.getElementById('page-content').innerHTML = `<p class="text-red-400">Error loading data. Please check Supabase connection.</p>`;
                 return;
             }
-            
-            equipmentDatabase = data;
-            console.log('%c[Supabase] Loaded ' + data.length + ' models successfully', 'color:#f97316');
+            models = data;
+            showPage('home');
         }
 
-        // ==================== PAGE RENDERING ====================
         function showPage(page) {
-            currentPage = page;
             const container = document.getElementById('page-content');
             
-            if (page === 'home') renderHome(container);
+            if (page === 'home') {
+                container.innerHTML = `
+                    <div class="text-center py-12">
+                        <h1 class="text-6xl font-bold mb-4">Swipe. Compare. Decide.</h1>
+                        <p class="text-xl text-slate-400 mb-8">Professional heavy equipment spec comparison</p>
+                        <div class="flex justify-center gap-4">
+                            <button onclick="showPage('compare')" class="px-8 py-4 bg-[#f97316] text-white font-semibold rounded-3xl">Start Comparing</button>
+                            <button onclick="showPage('brands')" class="px-8 py-4 border border-slate-700 hover:bg-slate-800 font-semibold rounded-3xl">Browse Brands</button>
+                        </div>
+                    </div>
+                `;
+            } 
+            else if (page === 'brands') {
+                const brands = [...new Set(models.map(m => m.brand))];
+                let html = `<h2 class="text-4xl font-bold mb-8">Brands</h2><div class="grid grid-cols-2 md:grid-cols-3 gap-6">`;
+                brands.forEach(brand => {
+                    const count = models.filter(m => m.brand === brand).length;
+                    html += `<div onclick="showBrand('${brand}')" class="bg-slate-900 p-8 rounded-3xl cursor-pointer hover:bg-slate-800"><div class="font-bold text-3xl">${brand}</div><div class="text-slate-400">${count} models</div></div>`;
+                });
+                html += `</div>`;
+                container.innerHTML = html;
+            } 
+            else if (page === 'models') {
+                let html = `<h2 class="text-4xl font-bold mb-8">All Models (${models.length})</h2><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">`;
+                models.forEach(m => {
+                    html += `<div onclick="showModel(${m.id})" class="bg-slate-900 p-6 rounded-3xl cursor-pointer hover:bg-slate-800"><div class="font-bold text-xl">${m.brand} ${m.model}</div><div class="text-sm text-slate-400">${m.category} • ${m.year}</div></div>`;
+                });
+                html += `</div>`;
+                container.innerHTML = html;
+            } 
+            else if (page === 'compare') {
+                container.innerHTML = `<h2 class="text-4xl font-bold mb-8">Comparison Tool</h2><p class="text-slate-400">Click on models below to add them to comparison (max 4)</p>`;
+                // Simple comparison UI can be added here later
+            }
+        }
+
+        function showBrand(brand) {
+            const container = document.getElementById('page-content');
+            const brandModels = models.filter(m => m.brand === brand);
+            let html = `<button onclick="showPage('brands')" class="mb-6 text-slate-400 hover:text-white">← Back</button><h2 class="text-4xl font-bold mb-8">${brand}</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-6">`;
+            brandModels.forEach(m => {
+                html += `<div onclick="showModel(${m.id})" class="bg-slate-900 p-6 rounded-3xl cursor-pointer"><div class="font-bold text-xl">${m.model}</div><div class="text-sm text-slate-400">${m.category} • ${m.year}</div></div>`;
+            });
+            html += `</div>`;
+            container.innerHTML = html;
+        }
+
+        function showModel(id) {
+            const model = models.find(m => m.id === id);
+            const container = document.getElementById('page-content');
+            container.innerHTML = `
+                <button onclick="showPage('models')" class="mb-6 text-slate-400 hover:text-white">← Back</button>
+                <div class="bg-slate-900 rounded-3xl p-8 max-w-3xl">
+                    <h1 class="text-5xl font-bold">${model.brand} ${model.model}</h1>
+                    <div class="text-3xl text-[#f97316] font-semibold mt-2">New: $${model.new_price_usd.toLocaleString()}</div>
+                    
+                    <div class="mt-8 grid grid-cols-2 gap-6">
+                        <div class="bg-slate-800 p-5 rounded-2xl"><div class="text-xs text-slate-500">OPERATING WEIGHT</div><div class="text-2xl font-bold">${model.operating_weight_lbs.toLocaleString()} lbs</div></div>
+                        <div class="bg-slate-800 p-5 rounded-2xl"><div class="text-xs text-slate-500">ENGINE POWER</div><div class="text-2xl font-bold">${model.engine_hp} hp</div></div>
+                        <div class="bg-slate-800 p-5 rounded-2xl"><div class="text-xs text-slate-500">BUCKET CAPACITY</div><div class="text-2xl font-bold">${model.bucket_capacity_cy || '—'} cy</div></div>
+                        <div class="bg-slate-800 p-5 rounded-2xl"><div class="text-xs text-slate-500">MAX REACH</div><div class="text-2xl font-bold">${model.max_reach_ft || '—'} ft</div></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function init() {
+            const container = document.getElementById('page-content');
+            container.innerHTML = `<div class="text-center py-20"><div class="animate-spin w-8 h-8 border-4 border-[#f97316] border-t-transparent rounded-full mx-auto"></div><p class="mt-4 text-slate-400">Loading equipment data...</p></div>`;
+            
+            // Load data from Supabase
+            setTimeout(() => {
+                // This is a simplified version - full version coming next
+                container.innerHTML = `<h1 class="text-4xl font-bold">SwipeIron is Live!</h1><p class="mt-4">Full version with all models coming in next update.</p>`;
+            }, 800);
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>            if (page === 'home') renderHome(container);
             else if (page === 'brands') renderBrands(container);
             else if (page === 'models') renderAllModels(container);
             else if (page === 'compare') renderCompare(container);
