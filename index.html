@@ -21,7 +21,7 @@
 </head>
 <body class="bg-slate-950 text-slate-200">
 
-    <!-- NAV (unchanged) -->
+    <!-- NAV -->
     <nav class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
             <div class="flex items-center gap-3">
@@ -38,34 +38,34 @@
         </div>
     </nav>
 
-    <!-- PAGE CONTENT (unchanged) -->
     <div id="page-content" class="max-w-7xl mx-auto px-6 py-8"></div>
 
     <script>
-        // ==================== SUPABASE CONNECTION ====================
+        // ==================== SUPABASE CONNECTION (FIXED) ====================
         const SUPABASE_URL = 'https://kffjahvpapxekbjfhinm.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtmZmphaHZwYXB4ZWtiamZoaW5tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NjUxMDMsImV4cCI6MjA4OTQ0MTEwM30.EZkCFq0y6Mr9Rt5rn51khbif4aK_cd6ACE-6qw9MZgU';
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        // FIXED: Changed variable name from 'supabase' to 'supabaseClient'
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let equipmentDatabase = [];
 
-        // Load data from Supabase (replaces hardcoded array)
         async function loadDataFromSupabase() {
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('equipment_models')
                 .select('*')
                 .order('brand', { ascending: true });
 
             if (error) {
                 console.error('Supabase Error:', error);
-                alert('Error loading data from database. Please check console.');
+                alert('Error loading data from database.');
                 return;
             }
             equipmentDatabase = data;
             console.log('%c[Supabase] Loaded ' + data.length + ' models successfully', 'color:#f97316');
         }
 
-        // ==================== ALL YOUR EXISTING CODE BELOW (UNCHANGED) ====================
+        // ==================== ALL YOUR EXISTING CODE (UNCHANGED) ====================
         let compareList = [];
         let currentPage = 'home';
 
