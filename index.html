@@ -6,7 +6,6 @@
     <title>SwipeIron | Swipe. Compare. Decide.</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: system-ui, -apple-system, sans-serif; }
         .equipment-card { transition: all 0.2s; }
@@ -15,7 +14,6 @@
 </head>
 <body class="bg-slate-950 text-slate-200">
 
-    <!-- NAV -->
     <nav class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50">
         <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
             <div class="flex items-center gap-3">
@@ -23,52 +21,55 @@
                 <div class="text-2xl font-semibold">SwipeIron</div>
             </div>
             <div class="flex gap-6 text-sm font-medium">
-                <a href="#" onclick="showPage('home')" class="hover:text-[#f97316]">Home</a>
-                <a href="#" onclick="showPage('brands')" class="hover:text-[#f97316]">Brands</a>
-                <a href="#" onclick="showPage('models')" class="hover:text-[#f97316]">All Models</a>
-                <a href="#" onclick="showPage('compare')" class="hover:text-[#f97316]">Compare</a>
+                <a href="#" onclick="showSection('home')" class="hover:text-[#f97316]">Home</a>
+                <a href="#" onclick="showSection('brands')" class="hover:text-[#f97316]">Brands</a>
+                <a href="#" onclick="showSection('models')" class="hover:text-[#f97316]">All Models</a>
+                <a href="#" onclick="showSection('compare')" class="hover:text-[#f97316]">Compare</a>
             </div>
             <div class="text-[#f97316] font-semibold text-sm">Swipe. Compare. Decide.</div>
         </div>
     </nav>
 
-    <div id="page-content" class="max-w-6xl mx-auto px-6 py-8"></div>
+    <div id="content" class="max-w-6xl mx-auto px-6 py-8"></div>
 
     <script>
-        const SUPABASE_URL = 'https://kffjahvpapxekbjfhinm.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtmZmphaHZwYXB4ZWtiamZoaW5tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NjUxMDMsImV4cCI6MjA4OTQ0MTEwM30.EZkCFq0y6Mr9Rt5rn51khbif4aK_cd6ACE-6qw9MZgU';
-        
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        let models = [];
+        const models = [
+            {id:1, brand:"Caterpillar", model:"320 GC", category:"Excavator", year:2024, weight:48500, hp:148, bucket:1.6, reach:31.5, fuel:92, newPrice:278400, usedPrice:195000},
+            {id:2, brand:"John Deere", model:"210G LC", category:"Excavator", year:2023, weight:50200, hp:159, bucket:1.55, reach:32.1, fuel:95, newPrice:265000, usedPrice:178000},
+            {id:3, brand:"Komatsu", model:"PC200-8", category:"Excavator", year:2024, weight:44500, hp:138, bucket:1.4, reach:30.8, fuel:88, newPrice:242000, usedPrice:162000},
+            {id:4, brand:"Volvo", model:"EC220E", category:"Excavator", year:2023, weight:47800, hp:166, bucket:1.5, reach:31.8, fuel:94, newPrice:271000, usedPrice:189000},
+            {id:5, brand:"Hitachi", model:"ZX350-6", category:"Excavator", year:2024, weight:76200, hp:268, bucket:2.8, reach:38.4, fuel:140, newPrice:425000, usedPrice:298000},
+            {id:6, brand:"Caterpillar", model:"950M", category:"Wheel Loader", year:2024, weight:38500, hp:250, bucket:3.5, reach:14.2, fuel:78, newPrice:312000, usedPrice:215000},
+            {id:7, brand:"John Deere", model:"644L", category:"Wheel Loader", year:2023, weight:41200, hp:265, bucket:3.8, reach:14.8, fuel:82, newPrice:338000, usedPrice:229000},
+            {id:8, brand:"Komatsu", model:"WA320-8", category:"Wheel Loader", year:2024, weight:35800, hp:172, bucket:3.2, reach:13.5, fuel:72, newPrice:268000, usedPrice:184000},
+            {id:9, brand:"Caterpillar", model:"D6 XE", category:"Bulldozer", year:2024, weight:49200, hp:215, bucket:null, reach:null, fuel:105, newPrice:465000, usedPrice:325000},
+            {id:10, brand:"John Deere", model:"750K", category:"Bulldozer", year:2023, weight:51500, hp:225, bucket:null, reach:null, fuel:110, newPrice:482000, usedPrice:339000},
+            {id:11, brand:"Komatsu", model:"D65EX-18", category:"Bulldozer", year:2024, weight:45500, hp:205, bucket:null, reach:null, fuel:98, newPrice:398000, usedPrice:278000},
+            {id:12, brand:"Caterpillar", model:"140 GC", category:"Motor Grader", year:2024, weight:35200, hp:188, bucket:null, reach:null, fuel:85, newPrice:298000, usedPrice:205000},
+            {id:13, brand:"Volvo", model:"G930B", category:"Motor Grader", year:2023, weight:33800, hp:175, bucket:null, reach:null, fuel:80, newPrice:275000, usedPrice:189000},
+            {id:14, brand:"Bomag", model:"BW213D-5", category:"Compactor", year:2024, weight:28600, hp:114, bucket:null, reach:null, fuel:52, newPrice:168000, usedPrice:112000},
+            {id:15, brand:"Case", model:"580 Super N", category:"Skid Steer", year:2023, weight:7850, hp:72, bucket:0.75, reach:8.4, fuel:22, newPrice:52000, usedPrice:34500},
+            {id:16, brand:"Caterpillar", model:"299D3 XE", category:"Skid Steer", year:2024, weight:11200, hp:110, bucket:0.95, reach:9.1, fuel:32, newPrice:78000, usedPrice:52000}
+        ];
+
         let compareList = [];
 
-        async function loadData() {
-            const { data, error } = await supabase.from('equipment_models').select('*');
-            if (error) {
-                console.error('Supabase error:', error);
-                document.getElementById('page-content').innerHTML = `<p class="text-red-400">Error loading data. Please check Supabase connection.</p>`;
-                return;
-            }
-            models = data;
-            showPage('home');
-        }
-
-        function showPage(page) {
-            const container = document.getElementById('page-content');
+        function showSection(section) {
+            const content = document.getElementById('content');
             
-            if (page === 'home') {
-                container.innerHTML = `
+            if (section === 'home') {
+                content.innerHTML = `
                     <div class="text-center py-12">
                         <h1 class="text-6xl font-bold mb-4">Swipe. Compare. Decide.</h1>
                         <p class="text-xl text-slate-400 mb-8">Professional heavy equipment spec comparison</p>
                         <div class="flex justify-center gap-4">
-                            <button onclick="showPage('compare')" class="px-8 py-4 bg-[#f97316] text-white font-semibold rounded-3xl">Start Comparing</button>
-                            <button onclick="showPage('brands')" class="px-8 py-4 border border-slate-700 hover:bg-slate-800 font-semibold rounded-3xl">Browse Brands</button>
+                            <button onclick="showSection('compare')" class="px-8 py-4 bg-[#f97316] text-white font-semibold rounded-3xl">Start Comparing</button>
+                            <button onclick="showSection('brands')" class="px-8 py-4 border border-slate-700 hover:bg-slate-800 font-semibold rounded-3xl">Browse Brands</button>
                         </div>
                     </div>
                 `;
             } 
-            else if (page === 'brands') {
+            else if (section === 'brands') {
                 const brands = [...new Set(models.map(m => m.brand))];
                 let html = `<h2 class="text-4xl font-bold mb-8">Brands</h2><div class="grid grid-cols-2 md:grid-cols-3 gap-6">`;
                 brands.forEach(brand => {
@@ -76,61 +77,62 @@
                     html += `<div onclick="showBrand('${brand}')" class="bg-slate-900 p-8 rounded-3xl cursor-pointer hover:bg-slate-800"><div class="font-bold text-3xl">${brand}</div><div class="text-slate-400">${count} models</div></div>`;
                 });
                 html += `</div>`;
-                container.innerHTML = html;
+                content.innerHTML = html;
             } 
-            else if (page === 'models') {
+            else if (section === 'models') {
                 let html = `<h2 class="text-4xl font-bold mb-8">All Models (${models.length})</h2><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">`;
                 models.forEach(m => {
                     html += `<div onclick="showModel(${m.id})" class="bg-slate-900 p-6 rounded-3xl cursor-pointer hover:bg-slate-800"><div class="font-bold text-xl">${m.brand} ${m.model}</div><div class="text-sm text-slate-400">${m.category} • ${m.year}</div></div>`;
                 });
                 html += `</div>`;
-                container.innerHTML = html;
+                content.innerHTML = html;
             } 
-            else if (page === 'compare') {
-                container.innerHTML = `<h2 class="text-4xl font-bold mb-8">Comparison Tool</h2><p class="text-slate-400">Click on models below to add them to comparison (max 4)</p>`;
-                // Simple comparison UI can be added here later
+            else if (section === 'compare') {
+                content.innerHTML = `<h2 class="text-4xl font-bold mb-8">Comparison Tool</h2><p class="text-slate-400">Click models below to add to comparison (max 4)</p>`;
             }
         }
 
         function showBrand(brand) {
-            const container = document.getElementById('page-content');
+            const content = document.getElementById('content');
             const brandModels = models.filter(m => m.brand === brand);
-            let html = `<button onclick="showPage('brands')" class="mb-6 text-slate-400 hover:text-white">← Back</button><h2 class="text-4xl font-bold mb-8">${brand}</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-6">`;
+            let html = `<button onclick="showSection('brands')" class="mb-6 text-slate-400 hover:text-white">← Back</button><h2 class="text-4xl font-bold mb-8">${brand}</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-6">`;
             brandModels.forEach(m => {
                 html += `<div onclick="showModel(${m.id})" class="bg-slate-900 p-6 rounded-3xl cursor-pointer"><div class="font-bold text-xl">${m.model}</div><div class="text-sm text-slate-400">${m.category} • ${m.year}</div></div>`;
             });
             html += `</div>`;
-            container.innerHTML = html;
+            content.innerHTML = html;
         }
 
         function showModel(id) {
             const model = models.find(m => m.id === id);
-            const container = document.getElementById('page-content');
-            container.innerHTML = `
-                <button onclick="showPage('models')" class="mb-6 text-slate-400 hover:text-white">← Back</button>
+            const content = document.getElementById('content');
+            content.innerHTML = `
+                <button onclick="showSection('models')" class="mb-6 text-slate-400 hover:text-white">← Back</button>
                 <div class="bg-slate-900 rounded-3xl p-8 max-w-3xl">
                     <h1 class="text-5xl font-bold">${model.brand} ${model.model}</h1>
-                    <div class="text-3xl text-[#f97316] font-semibold mt-2">New: $${model.new_price_usd.toLocaleString()}</div>
+                    <div class="text-3xl text-[#f97316] font-semibold mt-2">New: $${model.newPrice.toLocaleString()}</div>
                     
                     <div class="mt-8 grid grid-cols-2 gap-6">
-                        <div class="bg-slate-800 p-5 rounded-2xl"><div class="text-xs text-slate-500">OPERATING WEIGHT</div><div class="text-2xl font-bold">${model.operating_weight_lbs.toLocaleString()} lbs</div></div>
-                        <div class="bg-slate-800 p-5 rounded-2xl"><div class="text-xs text-slate-500">ENGINE POWER</div><div class="text-2xl font-bold">${model.engine_hp} hp</div></div>
-                        <div class="bg-slate-800 p-5 rounded-2xl"><div class="text-xs text-slate-500">BUCKET CAPACITY</div><div class="text-2xl font-bold">${model.bucket_capacity_cy || '—'} cy</div></div>
-                        <div class="bg-slate-800 p-5 rounded-2xl"><div class="text-xs text-slate-500">MAX REACH</div><div class="text-2xl font-bold">${model.max_reach_ft || '—'} ft</div></div>
+                        <div class="bg-slate-800 p-5 rounded-2xl"><div class="text-xs text-slate-500">OPERATING WEIGHT</div><div class="text-2xl font-bold">${model.weight.toLocaleString()} lbs</div></div>
+                        <div class="bg-slate-800 p-5 rounded-2xl"><div class="text-xs text-slate-500">ENGINE POWER</div><div class="text-2xl font-bold">${model.hp} hp</div></div>
+                        <div class="bg-slate-800 p-5 rounded-2xl"><div class="text-xs text-slate-500">BUCKET CAPACITY</div><div class="text-2xl font-bold">${model.bucket || '—'} cy</div></div>
+                        <div class="bg-slate-800 p-5 rounded-2xl"><div class="text-xs text-slate-500">MAX REACH</div><div class="text-2xl font-bold">${model.reach || '—'} ft</div></div>
                     </div>
                 </div>
             `;
         }
 
         function init() {
-            const container = document.getElementById('page-content');
-            container.innerHTML = `<div class="text-center py-20"><div class="animate-spin w-8 h-8 border-4 border-[#f97316] border-t-transparent rounded-full mx-auto"></div><p class="mt-4 text-slate-400">Loading equipment data...</p></div>`;
-            
-            // Load data from Supabase
-            setTimeout(() => {
-                // This is a simplified version - full version coming next
-                container.innerHTML = `<h1 class="text-4xl font-bold">SwipeIron is Live!</h1><p class="mt-4">Full version with all models coming in next update.</p>`;
-            }, 800);
+            document.getElementById('content').innerHTML = `
+                <div class="text-center py-12">
+                    <h1 class="text-6xl font-bold mb-4">Swipe. Compare. Decide.</h1>
+                    <p class="text-xl text-slate-400 mb-8">Professional heavy equipment spec comparison</p>
+                    <div class="flex justify-center gap-4">
+                        <button onclick="showSection('compare')" class="px-8 py-4 bg-[#f97316] text-white font-semibold rounded-3xl">Start Comparing</button>
+                        <button onclick="showSection('brands')" class="px-8 py-4 border border-slate-700 hover:bg-slate-800 font-semibold rounded-3xl">Browse Brands</button>
+                    </div>
+                </div>
+            `;
         }
 
         window.onload = init;
