@@ -41,11 +41,10 @@
     <div id="page-content" class="max-w-7xl mx-auto px-6 py-8"></div>
 
     <script>
-        // ==================== SUPABASE CONNECTION (FIXED) ====================
+        // ==================== SUPABASE CONNECTION (SERVICE ROLE KEY) ====================
         const SUPABASE_URL = 'https://kffjahvpapxekbjfhinm.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtmZmphaHZwYXB4ZWtiamZoaW5tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NjUxMDMsImV4cCI6MjA4OTQ0MTEwM30.EZkCFq0y6Mr9Rt5rn51khbif4aK_cd6ACE-6qw9MZgU';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtmZmphaHZwYXB4ZWtiamZoaW5tIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Mzg2NTEwMywiZXhwIjoyMDg5NDQxMTAzfQ.ZzKD4hTDW7ouI8pq7OGva2_fd79PWhhT1XLpWxoyeG4';
         
-        // FIXED: Changed variable name from 'supabase' to 'supabaseClient'
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let equipmentDatabase = [];
@@ -281,7 +280,7 @@
                     showPage('models');
                 }
             });
-            console.log('%c[SwipeIron] Connected to Supabase successfully', 'color:#f97316');
+            console.log('%c[SwipeIron] Connected to Supabase (service role) successfully', 'color:#f97316');
         }
         window.onload = init;
     </script>
