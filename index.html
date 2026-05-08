@@ -41,9 +41,9 @@
     <div id="page-content" class="max-w-7xl mx-auto px-6 py-8"></div>
 
     <script>
-        // ==================== SUPABASE CONNECTION (SERVICE ROLE KEY) ====================
+        // ==================== SUPABASE CONNECTION (NEW PUBLISHABLE KEY) ====================
         const SUPABASE_URL = 'https://kffjahvpapxekbjfhinm.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtmZmphaHZwYXB4ZWtiamZoaW5tIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Mzg2NTEwMywiZXhwIjoyMDg5NDQxMTAzfQ.ZzKD4hTDW7ouI8pq7OGva2_fd79PWhhT1XLpWxoyeG4';
+        const SUPABASE_KEY = 'sb_publishable_8jEfhEqfTx71HPiyUcybYg_A3mGzlm0';
         
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -57,7 +57,7 @@
 
             if (error) {
                 console.error('Supabase Error:', error);
-                alert('Error loading data from database.');
+                alert('Error loading data from database. Check console for details.');
                 return;
             }
             equipmentDatabase = data;
@@ -280,7 +280,7 @@
                     showPage('models');
                 }
             });
-            console.log('%c[SwipeIron] Connected to Supabase (service role) successfully', 'color:#f97316');
+            console.log('%c[SwipeIron] Connected to Supabase successfully', 'color:#f97316');
         }
         window.onload = init;
     </script>
