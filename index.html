@@ -35,7 +35,7 @@
                 <a href="#" onclick="showPage('compare')" class="nav-link hover:text-[#f97316]">Compare</a>
             </div>
             
-            <!-- US/METRIC TOGGLE -->
+            <!-- US / METRIC TOGGLE -->
             <div class="flex items-center bg-slate-800 rounded-2xl p-1 border border-slate-700">
                 <div onclick="switchUnit('us')" id="btn-us"
                      class="px-4 py-1.5 rounded-xl text-sm font-semibold cursor-pointer flex items-center gap-x-2 bg-slate-700 text-white">
@@ -83,7 +83,6 @@
         function switchUnit(unit) {
             currentUnit = unit;
             
-            // Update toggle buttons
             const btnUs = document.getElementById('btn-us');
             const btnMetric = document.getElementById('btn-metric');
             
@@ -99,7 +98,6 @@
                 btnUs.classList.add('text-slate-400');
             }
             
-            // Refresh current page
             const container = document.getElementById('page-content');
             if (currentPage === 'aerial') renderAerial(container);
             else if (currentPage === 'home') renderHome(container);
@@ -108,7 +106,92 @@
             else if (currentPage === 'compare') renderCompare(container);
         }
 
-        // ==================== EXISTING PAGES (UNCHANGED) ====================
+        // ==================== SMART CARD RENDERER ====================
+        function createModelCardHTML(model) {
+            const specs = model.specs || {};
+            const isAerial = model.category === 'Aerial' || 
+                             (model.subcategory && model.subcategory.includes('Scissor'));
+            
+            if (isAerial) {
+                // AERIAL CARD
+                let height = specs.platform_height_ft || 0;
+                let capacity = specs.platform_capacity_lbs || 0;
+                let weight = specs.operating_weight_lbs || specs.weight_lbs || 0;
+                let power = specs.power_source || 'Electric';
+                
+                if (currentUnit === 'metric') {
+                    height = (height * 0.3048).toFixed(1);
+                    capacity = Math.round(capacity * 0.4536);
+                    weight = Math.round(weight * 0.4536);
+                }
+                
+                const hUnit = currentUnit === 'us' ? 'ft' : 'm';
+                const cUnit = currentUnit === 'us' ? 'lbs' : 'kg';
+                const wUnit = currentUnit === 'us' ? 'lbs' : 'kg';
+                
+                return `
+                    <div onclick="showModelDetail(${model.id})" class="equipment-card bg-slate-900 hover:bg-slate-800 p-6 rounded-3xl cursor-pointer border border-slate-800">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <div class="text-xs text-orange-500 font-semibold">${model.subcategory || 'Aerial'}</div>
+                                <div class="font-bold text-xl">${model.brand} ${model.model}</div>
+                            </div>
+                            <div class="px-3 py-1 text-xs rounded-full ${power === 'Electric' ? 'bg-emerald-900 text-emerald-400' : 'bg-amber-900 text-amber-400'}">${power}</div>
+                        </div>
+                        
+                        <div class="grid grid-cols-3 gap-4 text-center">
+                            <div>
+                                <div class="text-xs text-slate-500">Platform Height</div>
+                                <div class="text-2xl font-bold text-[#f97316]">${height}</div>
+                                <div class="text-xs text-slate-500">${hUnit}</div>
+                            </div>
+                            <div>
+                                <div class="text-xs text-slate-500">Capacity</div>
+                                <div class="text-2xl font-bold text-[#f97316]">${capacity.toLocaleString()}</div>
+                                <div class="text-xs text-slate-500">${cUnit}</div>
+                            </div>
+                            <div>
+                                <div class="text-xs text-slate-500">Weight</div>
+                                <div class="text-2xl font-bold text-[#f97316]">${weight.toLocaleString()}</div>
+                                <div class="text-xs text-slate-500">${wUnit}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-5 pt-4 border-t border-slate-800 flex justify-between text-xs">
+                            <div class="text-emerald-400">In Stock</div>
+                            <div class="text-slate-400">Click for full specs →</div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // CONSTRUCTION CARD
+                const weight = model.operating_weight_lbs || specs.operating_weight_lbs || '—';
+                const hp = model.engine_hp || specs.engine_hp || '—';
+                const bucket = model.bucket_capacity_cy || specs.bucket_capacity_cy || '—';
+                
+                return `
+                    <div onclick="showModelDetail(${model.id})" class="equipment-card bg-slate-900 hover:bg-slate-800 p-6 rounded-3xl cursor-pointer border border-slate-800">
+                        <div class="flex justify-between">
+                            <div>
+                                <div class="text-sm text-slate-400">${model.year || ''} • ${model.category || ''}</div>
+                                <div class="font-bold text-xl">${model.brand} ${model.model}</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xs text-slate-500">NEW</div>
+                                <div class="font-semibold">$${(model.new_price_usd || 0).toLocaleString()}</div>
+                            </div>
+                        </div>
+                        <div class="mt-6 grid grid-cols-3 gap-4 text-center text-sm">
+                            <div><div class="text-[#f97316] font-bold">${weight}</div><div class="text-xs text-slate-500">lbs</div></div>
+                            <div><div class="text-[#f97316] font-bold">${hp}</div><div class="text-xs text-slate-500">hp</div></div>
+                            <div><div class="text-[#f97316] font-bold">${bucket}</div><div class="text-xs text-slate-500">ft / cy</div></div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // ==================== PAGES ====================
         function showPage(page) {
             currentPage = page;
             const container = document.getElementById('page-content');
@@ -183,33 +266,6 @@
             container.innerHTML = html;
         }
 
-        function createModelCardHTML(model) {
-            // Support both old flat fields and new specs JSONB
-            const specs = model.specs || {};
-            const weight = model.operating_weight_lbs || specs.operating_weight_lbs || specs.weight_lbs || '—';
-            const hp = model.engine_hp || specs.engine_hp || '—';
-            
-            return `
-                <div onclick="showModelDetail(${model.id})" class="equipment-card bg-slate-900 hover:bg-slate-800 p-6 rounded-3xl cursor-pointer border border-slate-800">
-                    <div class="flex justify-between">
-                        <div>
-                            <div class="text-sm text-slate-400">${model.year || ''} • ${model.category || model.subcategory || ''}</div>
-                            <div class="font-bold text-xl">${model.brand} ${model.model}</div>
-                        </div>
-                        <div class="text-right">
-                            <div class="text-xs text-slate-500">NEW</div>
-                            <div class="font-semibold">$${(model.new_price_usd || 0).toLocaleString()}</div>
-                        </div>
-                    </div>
-                    <div class="mt-6 grid grid-cols-3 gap-4 text-center text-sm">
-                        <div><div class="text-[#f97316] font-bold">${weight}</div><div class="text-xs text-slate-500">lbs</div></div>
-                        <div><div class="text-[#f97316] font-bold">${hp}</div><div class="text-xs text-slate-500">hp</div></div>
-                        <div><div class="text-[#f97316] font-bold">${model.bucket_capacity_cy || specs.platform_height_ft || '—'}</div><div class="text-xs text-slate-500">ft / cy</div></div>
-                    </div>
-                </div>
-            `;
-        }
-
         function renderAllModels(container) {
             let html = `<h2 class="section-header mb-8">All Equipment Models</h2><div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">`;
             equipmentDatabase.forEach(model => html += createModelCardHTML(model));
@@ -238,7 +294,6 @@
         }
 
         function renderCompare(container) {
-            // Keep your existing compare code exactly as it was
             let html = `
                 <h2 class="section-header mb-4">Side-by-Side Comparison</h2>
                 <p class="text-slate-400 mb-6">Select up to 4 machines to compare specifications</p>
@@ -265,12 +320,11 @@
             showPage('compare');
         }
 
-        // ==================== NEW AERIAL PAGE ====================
+        // ==================== AERIAL PAGE ====================
         function renderAerial(container) {
             const aerialModels = equipmentDatabase.filter(m => 
                 m.category === 'Aerial' || 
-                m.subcategory === 'Electric Scissor Lift' || 
-                m.subcategory === 'Engine Powered Scissor Lift'
+                (m.subcategory && m.subcategory.includes('Scissor'))
             );
             
             let html = `
@@ -284,59 +338,7 @@
                 <div class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">`;
             
             aerialModels.forEach(model => {
-                const specs = model.specs || {};
-                
-                // Get values with fallback
-                let height = specs.platform_height_ft || model.platform_height_ft || 0;
-                let capacity = specs.platform_capacity_lbs || model.platform_capacity_lbs || 0;
-                let weight = specs.operating_weight_lbs || model.operating_weight_lbs || 0;
-                let power = specs.power_source || model.power_source || 'Electric';
-                
-                // Convert if metric
-                if (currentUnit === 'metric') {
-                    height = (height * 0.3048).toFixed(1);
-                    capacity = Math.round(capacity * 0.4536);
-                    weight = Math.round(weight * 0.4536);
-                }
-                
-                const heightUnit = currentUnit === 'us' ? 'ft' : 'm';
-                const capacityUnit = currentUnit === 'us' ? 'lbs' : 'kg';
-                const weightUnit = currentUnit === 'us' ? 'lbs' : 'kg';
-                
-                html += `
-                    <div class="equipment-card bg-slate-900 hover:bg-slate-800 p-6 rounded-3xl border border-slate-800 cursor-pointer" onclick="showModelDetail(${model.id})">
-                        <div class="flex justify-between items-start mb-4">
-                            <div>
-                                <div class="text-xs text-orange-500 font-semibold">${model.subcategory || 'Aerial'}</div>
-                                <div class="font-bold text-xl">${model.brand} ${model.model}</div>
-                            </div>
-                            <div class="px-3 py-1 text-xs rounded-full ${power === 'Electric' ? 'bg-emerald-900 text-emerald-400' : 'bg-amber-900 text-amber-400'}">${power}</div>
-                        </div>
-                        
-                        <div class="grid grid-cols-3 gap-4 text-center">
-                            <div>
-                                <div class="text-xs text-slate-500">Platform Height</div>
-                                <div class="text-2xl font-bold text-[#f97316]">${height}</div>
-                                <div class="text-xs text-slate-500">${heightUnit}</div>
-                            </div>
-                            <div>
-                                <div class="text-xs text-slate-500">Capacity</div>
-                                <div class="text-2xl font-bold text-[#f97316]">${capacity.toLocaleString()}</div>
-                                <div class="text-xs text-slate-500">${capacityUnit}</div>
-                            </div>
-                            <div>
-                                <div class="text-xs text-slate-500">Weight</div>
-                                <div class="text-2xl font-bold text-[#f97316]">${weight.toLocaleString()}</div>
-                                <div class="text-xs text-slate-500">${weightUnit}</div>
-                            </div>
-                        </div>
-                        
-                        <div class="mt-5 pt-4 border-t border-slate-800 flex justify-between text-xs">
-                            <div class="text-emerald-400">In Stock</div>
-                            <div class="text-slate-400">Click for full specs →</div>
-                        </div>
-                    </div>
-                `;
+                html += createModelCardHTML(model);
             });
             
             html += `</div>`;
@@ -349,10 +351,9 @@
             const container = document.getElementById('page-content');
             renderHome(container);
             
-            // Set initial US toggle style
             document.getElementById('btn-us').classList.add('bg-slate-700', 'text-white');
             
-            console.log('%c[SwipeIron] Site loaded with Aerial section + Unit Toggle', 'color:#f97316');
+            console.log('%c[SwipeIron] Full site loaded with smart cards + Aerial section', 'color:#f97316');
         }
         
         window.onload = init;
