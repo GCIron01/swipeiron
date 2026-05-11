@@ -106,19 +106,25 @@
             else if (currentPage === 'compare') renderCompare(container);
         }
 
-        // ==================== SMART CARD RENDERER ====================
+        // ==================== SMART CARD RENDERER (FIXED) ====================
         function createModelCardHTML(model) {
             const specs = model.specs || {};
             const isAerial = model.category === 'Aerial' || 
                              (model.subcategory && model.subcategory.includes('Scissor'));
             
             if (isAerial) {
-                // AERIAL CARD
+                // ========== AERIAL CARD ==========
                 let height = specs.platform_height_ft || 0;
                 let capacity = specs.platform_capacity_lbs || 0;
                 let weight = specs.operating_weight_lbs || specs.weight_lbs || 0;
-                let power = specs.power_source || 'Electric';
                 
+                // Determine correct power type
+                let powerType = 'Electric';
+                if (model.subcategory && model.subcategory.includes('Engine')) {
+                    powerType = 'Engine';
+                }
+                
+                // Convert units
                 if (currentUnit === 'metric') {
                     height = (height * 0.3048).toFixed(1);
                     capacity = Math.round(capacity * 0.4536);
@@ -136,7 +142,7 @@
                                 <div class="text-xs text-orange-500 font-semibold">${model.subcategory || 'Aerial'}</div>
                                 <div class="font-bold text-xl">${model.brand} ${model.model}</div>
                             </div>
-                            <div class="px-3 py-1 text-xs rounded-full ${power === 'Electric' ? 'bg-emerald-900 text-emerald-400' : 'bg-amber-900 text-amber-400'}">${power}</div>
+                            <div class="px-3 py-1 text-xs rounded-full ${powerType === 'Electric' ? 'bg-emerald-900 text-emerald-400' : 'bg-amber-900 text-amber-400'}">${powerType}</div>
                         </div>
                         
                         <div class="grid grid-cols-3 gap-4 text-center">
@@ -157,14 +163,13 @@
                             </div>
                         </div>
                         
-                        <div class="mt-5 pt-4 border-t border-slate-800 flex justify-between text-xs">
-                            <div class="text-emerald-400">In Stock</div>
-                            <div class="text-slate-400">Click for full specs →</div>
+                        <div class="mt-5 pt-4 border-t border-slate-800 flex justify-between text-xs text-slate-400">
+                            <div>Click for full specs →</div>
                         </div>
                     </div>
                 `;
             } else {
-                // CONSTRUCTION CARD
+                // ========== CONSTRUCTION CARD ==========
                 const weight = model.operating_weight_lbs || specs.operating_weight_lbs || '—';
                 const hp = model.engine_hp || specs.engine_hp || '—';
                 const bucket = model.bucket_capacity_cy || specs.bucket_capacity_cy || '—';
@@ -353,7 +358,7 @@
             
             document.getElementById('btn-us').classList.add('bg-slate-700', 'text-white');
             
-            console.log('%c[SwipeIron] Full site loaded with smart cards + Aerial section', 'color:#f97316');
+            console.log('%c[SwipeIron] Clean version loaded (no stock label + correct power badges)', 'color:#f97316');
         }
         
         window.onload = init;
