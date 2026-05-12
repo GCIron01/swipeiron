@@ -30,6 +30,7 @@
             <div class="hidden md:flex items-center gap-8 text-base font-medium">
                 <a href="#" onclick="showPage('home')" class="nav-link hover:text-[#f97316]">Home</a>
                 <a href="#" onclick="showPage('brands')" class="nav-link hover:text-[#f97316]">Brands</a>
+                <a href="#" onclick="showPage('construction')" class="nav-link hover:text-[#f97316]">Construction</a>
                 <a href="#" onclick="showPage('aerial')" class="nav-link hover:text-[#f97316]">Aerial</a>
                 <a href="#" onclick="showPage('models')" class="nav-link hover:text-[#f97316]">All Models</a>
                 <a href="#" onclick="showPage('compare')" class="nav-link hover:text-[#f97316]">Compare</a>
@@ -99,14 +100,15 @@
             }
             
             const container = document.getElementById('page-content');
-            if (currentPage === 'aerial') renderAerial(container);
+            if (currentPage === 'construction') renderConstruction(container);
+            else if (currentPage === 'aerial') renderAerial(container);
             else if (currentPage === 'home') renderHome(container);
             else if (currentPage === 'models') renderAllModels(container);
             else if (currentPage === 'brands') renderBrands(container);
             else if (currentPage === 'compare') renderCompare(container);
         }
 
-        // ==================== FIXED SMART CARD RENDERER ====================
+        // ==================== SMART CARD RENDERER ====================
         function createModelCardHTML(model) {
             const specs = model.specs || {};
             const isAerial = model.category === 'Aerial' || 
@@ -200,6 +202,7 @@
             
             if (page === 'home') renderHome(container);
             else if (page === 'brands') renderBrands(container);
+            else if (page === 'construction') renderConstruction(container);
             else if (page === 'aerial') renderAerial(container);
             else if (page === 'models') renderAllModels(container);
             else if (page === 'compare') renderCompare(container);
@@ -212,7 +215,8 @@
                     <p class="text-2xl text-slate-400 max-w-2xl mx-auto">The definitive spec comparison platform for heavy equipment.</p>
                     <div class="mt-8 flex justify-center gap-4">
                         <button onclick="showPage('compare')" class="px-8 py-4 bg-[#f97316] text-white font-semibold rounded-3xl text-lg hover:bg-orange-600 transition-all">Start Comparing</button>
-                        <button onclick="showPage('aerial')" class="px-8 py-4 border border-slate-700 hover:bg-slate-800 font-semibold rounded-3xl text-lg">Browse Aerial Equipment</button>
+                        <button onclick="showPage('construction')" class="px-8 py-4 border border-slate-700 hover:bg-slate-800 font-semibold rounded-3xl text-lg">Browse Construction</button>
+                        <button onclick="showPage('aerial')" class="px-8 py-4 border border-slate-700 hover:bg-slate-800 font-semibold rounded-3xl text-lg">Browse Aerial</button>
                     </div>
                 </div>
                 <div class="grid md:grid-cols-3 gap-6 mb-12">
@@ -264,6 +268,51 @@
                 </div>
                 <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">`;
             brandModels.forEach(model => { html += createModelCardHTML(model); });
+            html += `</div>`;
+            container.innerHTML = html;
+        }
+
+        function renderConstruction(container) {
+            const constructionModels = equipmentDatabase.filter(m => m.category === 'Construction');
+            
+            let html = `
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h2 class="section-header">Construction Equipment</h2>
+                        <p class="text-slate-400">Excavators, Dozers, Loaders &amp; More</p>
+                    </div>
+                    <div class="text-sm text-slate-400">${constructionModels.length} models • Units: <span class="font-semibold text-[#f97316]">${currentUnit.toUpperCase()}</span></div>
+                </div>
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">`;
+            
+            constructionModels.forEach(model => {
+                html += createModelCardHTML(model);
+            });
+            
+            html += `</div>`;
+            container.innerHTML = html;
+        }
+
+        function renderAerial(container) {
+            const aerialModels = equipmentDatabase.filter(m => 
+                m.category === 'Aerial' || 
+                (model.subcategory && model.subcategory.includes('Scissor'))
+            );
+            
+            let html = `
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h2 class="section-header">Aerial Equipment</h2>
+                        <p class="text-slate-400">JLG Electric &amp; Rough Terrain Scissor Lifts</p>
+                    </div>
+                    <div class="text-sm text-slate-400">${aerialModels.length} models • Units: <span class="font-semibold text-[#f97316]">${currentUnit.toUpperCase()}</span></div>
+                </div>
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">`;
+            
+            aerialModels.forEach(model => {
+                html += createModelCardHTML(model);
+            });
+            
             html += `</div>`;
             container.innerHTML = html;
         }
@@ -322,30 +371,6 @@
             showPage('compare');
         }
 
-        function renderAerial(container) {
-            const aerialModels = equipmentDatabase.filter(m => 
-                m.category === 'Aerial' || 
-                (model.subcategory && model.subcategory.includes('Scissor'))
-            );
-            
-            let html = `
-                <div class="flex items-center justify-between mb-8">
-                    <div>
-                        <h2 class="section-header">Aerial Equipment</h2>
-                        <p class="text-slate-400">JLG Electric &amp; Rough Terrain Scissor Lifts</p>
-                    </div>
-                    <div class="text-sm text-slate-400">${aerialModels.length} models • Units: <span class="font-semibold text-[#f97316]">${currentUnit.toUpperCase()}</span></div>
-                </div>
-                <div class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">`;
-            
-            aerialModels.forEach(model => {
-                html += createModelCardHTML(model);
-            });
-            
-            html += `</div>`;
-            container.innerHTML = html;
-        }
-
         // ==================== INITIALIZE ====================
         async function init() {
             await loadDataFromSupabase();
@@ -354,7 +379,7 @@
             
             document.getElementById('btn-us').classList.add('bg-slate-700', 'text-white');
             
-            console.log('%c[SwipeIron] Full clean version loaded successfully', 'color:#f97316');
+            console.log('%c[SwipeIron] Full site with Construction section loaded', 'color:#f97316');
         }
         
         window.onload = init;
