@@ -218,4 +218,135 @@
                 
                 <div class="bg-slate-900 p-6 rounded-3xl mb-6">
                     <div class="text-sm text-slate-400 mb-3">Select machines:</div>
-                    <div class="grid grid-cols-2 md
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">`;
+            
+            equipmentDatabase.forEach(model => {
+                const isSelected = compareList.some(m => m.id === model.id);
+                html += `
+                    <div onclick="toggleCompare(${model.id})" class="p-3 rounded-2xl cursor-pointer text-sm flex items-center gap-2 ${isSelected ? 'bg-[#f97316] text-white' : 'bg-slate-800 hover:bg-slate-700'}">
+                        <i class="fa-solid ${isSelected ? 'fa-check-circle' : 'fa-plus-circle'}"></i>
+                        <span>${model.brand} ${model.model}</span>
+                    </div>
+                `;
+            });
+            
+            html += `</div></div>`;
+            
+            if (compareList.length > 0) {
+                html += `
+                    <div class="bg-slate-900 p-6 rounded-3xl mb-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <div class="font-semibold">Selected (${compareList.length}/4)</div>
+                            <button onclick="performComparison()" class="px-8 py-3 bg-[#f97316] hover:bg-orange-600 text-white font-semibold rounded-2xl flex items-center gap-2">
+                                <i class="fa-solid fa-balance-scale"></i> <span>Compare Now</span>
+                            </button>
+                        </div>
+                        <div class="flex flex-wrap gap-3">`;
+                
+                compareList.forEach((model, index) => {
+                    html += `
+                        <div class="flex items-center gap-2 bg-slate-800 px-4 py-2 rounded-2xl">
+                            <span>${model.brand} ${model.model}</span>
+                            <button onclick="removeFromCompare(${index})" class="text-red-400 hover:text-red-500 ml-2"><i class="fa-solid fa-times"></i></button>
+                        </div>
+                    `;
+                });
+                
+                html += `</div></div>`;
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function toggleCompare(id) {
+            const index = compareList.findIndex(m => m.id === id);
+            if (index > -1) compareList.splice(index, 1);
+            else if (compareList.length < 4) compareList.push(equipmentDatabase.find(m => m.id === id));
+            renderCompare(document.getElementById('page-content'));
+        }
+
+        function removeFromCompare(index) {
+            compareList.splice(index, 1);
+            renderCompare(document.getElementById('page-content'));
+        }
+
+        function performComparison() {
+            const container = document.getElementById('page-content');
+            
+            let html = `
+                <button onclick="showPage('compare')" class="mb-6 flex items-center gap-2 text-slate-400 hover:text-white"><i class="fa-solid fa-arrow-left"></i> Back</button>
+                <h2 class="section-header mb-8">Comparison Results</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full bg-slate-900 rounded-3xl overflow-hidden text-sm">
+                        <thead>
+                            <tr class="border-b border-slate-800">
+                                <th class="p-4 text-left font-semibold">Specification</th>`;
+            
+            compareList.forEach(model => {
+                html += `<th class="p-4 text-center"><div class="font-bold">${model.brand}</div><div class="text-xs text-slate-400">${model.model}</div></th>`;
+            });
+            
+            html += `</tr></thead><tbody>`;
+            
+            // Smart specs based on type
+            const isAerialComparison = compareList.some(m => m.category === 'Aerial' || (m.subcategory && m.subcategory.includes('Scissor')));
+            
+            if (isAerialComparison) {
+                // Aerial specs
+                const aerialRows = [
+                    { label: 'Platform Height (ft)', key: 'platform_height_elevated_ft' },
+                    { label: 'Platform Capacity (lbs)', key: 'platform_capacity_lbs' },
+                    { label: 'Operating Weight (lbs)', key: 'operating_weight_lbs' },
+                    { label: 'Power Source', key: 'power_source' },
+                    { label: 'Gradeability (%)', key: 'gradeability_percent' },
+                    { label: 'Drive Speed Lowered (mph)', key: 'drive_speed_lowered_mph' },
+                    { label: 'Lift Time (seconds)', key: 'lift_time_seconds' },
+                ];
+                
+                aerialRows.forEach(row => {
+                    html += `<tr class="border-b border-slate-800"><td class="p-4 font-medium">${row.label}</td>`;
+                    compareList.forEach(model => {
+                        const specs = model.specs || {};
+                        let value = specs[row.key] || '—';
+                        if (row.key.includes('height') && value !== '—') value = value + ' ft';
+                        if (row.key.includes('capacity') || row.key.includes('weight')) value = value.toLocaleString() + ' lbs';
+                        html += `<td class="p-4 text-center font-semibold text-[#f97316]">${value}</td>`;
+                    });
+                    html += `</tr>`;
+                });
+            } else {
+                // Construction specs
+                const constructionRows = [
+                    { label: 'Operating Weight (lbs)', key: 'operating_weight_lbs' },
+                    { label: 'Engine HP', key: 'engine_hp' },
+                    { label: 'Bucket Capacity (cy)', key: 'bucket_capacity_cy' },
+                    { label: 'New Price (USD)', key: 'new_price_usd', format: v => '$' + (v || 0).toLocaleString() },
+                ];
+                
+                constructionRows.forEach(row => {
+                    html += `<tr class="border-b border-slate-800"><td class="p-4 font-medium">${row.label}</td>`;
+                    compareList.forEach(model => {
+                        let value = model[row.key] || (model.specs && model.specs[row.key]) || '—';
+                        if (row.format) value = row.format(value);
+                        html += `<td class="p-4 text-center font-semibold text-[#f97316]">${value}</td>`;
+                    });
+                    html += `</tr>`;
+                });
+            }
+            
+            html += `</tbody></table></div>`;
+            container.innerHTML = html;
+        }
+
+        async function init() {
+            await loadDataFromSupabase();
+            const container = document.getElementById('page-content');
+            renderHome(container);
+            document.getElementById('btn-us').classList.add('bg-slate-700', 'text-white');
+            console.log('%c[SwipeIron] Rich comparison with real specs loaded', 'color:#f97316');
+        }
+        
+        window.onload = init;
+    </script>
+</body>
+</html>
