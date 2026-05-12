@@ -15,8 +15,6 @@
         .font-display { font-family: 'Space Grotesk', 'Inter', sans-serif; font-weight: 600; }
         .equipment-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .equipment-card:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgb(15 23 42 / 0.1); }
-        .nav-active { color: #f97316; font-weight: 600; }
-        .section-header { font-size: 2.25rem; line-height: 2.5rem; font-weight: 700; letter-spacing: -0.025em; }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-200">
@@ -37,15 +35,11 @@
             </div>
             
             <div class="flex items-center bg-slate-800 rounded-2xl p-1 border border-slate-700">
-                <div onclick="switchUnit('us')" id="btn-us"
-                     class="px-4 py-1.5 rounded-xl text-sm font-semibold cursor-pointer flex items-center gap-x-2 bg-slate-700 text-white">
-                    <i class="fa-solid fa-flag-usa"></i>
-                    <span>US</span>
+                <div onclick="switchUnit('us')" id="btn-us" class="px-4 py-1.5 rounded-xl text-sm font-semibold cursor-pointer flex items-center gap-x-2 bg-slate-700 text-white">
+                    <i class="fa-solid fa-flag-usa"></i><span>US</span>
                 </div>
-                <div onclick="switchUnit('metric')" id="btn-metric"
-                     class="px-4 py-1.5 rounded-xl text-sm font-semibold cursor-pointer flex items-center gap-x-2 text-slate-400 hover:text-white">
-                    <i class="fa-solid fa-globe"></i>
-                    <span>Metric</span>
+                <div onclick="switchUnit('metric')" id="btn-metric" class="px-4 py-1.5 rounded-xl text-sm font-semibold cursor-pointer flex items-center gap-x-2 text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-globe"></i><span>Metric</span>
                 </div>
             </div>
         </div>
@@ -65,7 +59,7 @@
 
         async function loadDataFromSupabase() {
             const { data, error } = await supabaseClient.from('equipment_models').select('*').order('brand', { ascending: true });
-            if (error) { console.error(error); alert('Error loading data'); return; }
+            if (error) { alert('Error loading data'); return; }
             equipmentDatabase = data;
         }
 
@@ -75,24 +69,17 @@
             const btnMetric = document.getElementById('btn-metric');
             
             if (unit === 'us') {
-                btnUs.classList.add('bg-slate-700', 'text-white');
-                btnUs.classList.remove('text-slate-400');
-                btnMetric.classList.remove('bg-slate-700', 'text-white');
-                btnMetric.classList.add('text-slate-400');
+                btnUs.classList.add('bg-slate-700', 'text-white'); btnUs.classList.remove('text-slate-400');
+                btnMetric.classList.remove('bg-slate-700', 'text-white'); btnMetric.classList.add('text-slate-400');
             } else {
-                btnMetric.classList.add('bg-slate-700', 'text-white');
-                btnMetric.classList.remove('text-slate-400');
-                btnUs.classList.remove('bg-slate-700', 'text-white');
-                btnUs.classList.add('text-slate-400');
+                btnMetric.classList.add('bg-slate-700', 'text-white'); btnMetric.classList.remove('text-slate-400');
+                btnUs.classList.remove('bg-slate-700', 'text-white'); btnUs.classList.add('text-slate-400');
             }
             
             const container = document.getElementById('page-content');
             if (currentPage === 'compare') renderCompare(container);
             else if (currentPage === 'construction') renderConstruction(container);
             else if (currentPage === 'aerial') renderAerial(container);
-            else if (currentPage === 'home') renderHome(container);
-            else if (currentPage === 'models') renderAllModels(container);
-            else if (currentPage === 'brands') renderBrands(container);
         }
 
         function createModelCardHTML(model) {
@@ -147,10 +134,7 @@
                                 <div class="text-sm text-slate-400">${model.year || ''} • ${model.category || ''}</div>
                                 <div class="font-bold text-xl">${model.brand} ${model.model}</div>
                             </div>
-                            <div class="text-right">
-                                <div class="text-xs text-slate-500">NEW</div>
-                                <div class="font-semibold">$${(model.new_price_usd || 0).toLocaleString()}</div>
-                            </div>
+                            <div class="text-right"><div class="text-xs text-slate-500">NEW</div><div class="font-semibold">$${(model.new_price_usd || 0).toLocaleString()}</div></div>
                         </div>
                         <div class="mt-6 grid grid-cols-3 gap-4 text-center text-sm">
                             <div><div class="text-[#f97316] font-bold">${weight}</div><div class="text-xs text-slate-500">lbs</div></div>
@@ -165,7 +149,6 @@
         function showPage(page) {
             currentPage = page;
             const container = document.getElementById('page-content');
-            
             if (page === 'home') renderHome(container);
             else if (page === 'brands') renderBrands(container);
             else if (page === 'construction') renderConstruction(container);
@@ -175,17 +158,7 @@
         }
 
         function renderHome(container) {
-            container.innerHTML = `
-                <div class="text-center py-16 hero-bg rounded-3xl mb-12">
-                    <h1 class="text-6xl font-display font-bold tracking-tighter mb-4">Swipe. Compare. Decide.</h1>
-                    <p class="text-2xl text-slate-400 max-w-2xl mx-auto">The definitive spec comparison platform for heavy equipment.</p>
-                    <div class="mt-8 flex justify-center gap-4">
-                        <button onclick="showPage('compare')" class="px-8 py-4 bg-[#f97316] text-white font-semibold rounded-3xl text-lg hover:bg-orange-600 transition-all">Start Comparing</button>
-                        <button onclick="showPage('construction')" class="px-8 py-4 border border-slate-700 hover:bg-slate-800 font-semibold rounded-3xl text-lg">Browse Construction</button>
-                        <button onclick="showPage('aerial')" class="px-8 py-4 border border-slate-700 hover:bg-slate-800 font-semibold rounded-3xl text-lg">Browse Aerial</button>
-                    </div>
-                </div>
-            `;
+            container.innerHTML = `<div class="text-center py-16"><h1 class="text-6xl font-display font-bold tracking-tighter mb-4">Swipe. Compare. Decide.</h1><p class="text-2xl text-slate-400">The definitive spec comparison platform for heavy equipment.</p></div>`;
         }
 
         function renderBrands(container) {
@@ -193,17 +166,7 @@
             let html = `<h2 class="section-header mb-8">Equipment Brands</h2><div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">`;
             brands.forEach(brand => {
                 const count = equipmentDatabase.filter(m => m.brand === brand).length;
-                html += `
-                    <div onclick="showBrandDetail('${brand}')" class="bg-slate-900 hover:bg-slate-800 transition-all p-8 rounded-3xl cursor-pointer border border-slate-800">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <div class="font-bold text-3xl">${brand}</div>
-                                <div class="text-slate-400">${count} models</div>
-                            </div>
-                            <i class="fa-solid fa-industry text-4xl text-[#f97316]"></i>
-                        </div>
-                    </div>
-                `;
+                html += `<div onclick="showBrandDetail('${brand}')" class="bg-slate-900 hover:bg-slate-800 p-8 rounded-3xl cursor-pointer border border-slate-800"><div class="flex justify-between"><div><div class="font-bold text-3xl">${brand}</div><div class="text-slate-400">${count} models</div></div><i class="fa-solid fa-industry text-4xl text-[#f97316]"></i></div></div>`;
             });
             html += `</div>`;
             container.innerHTML = html;
@@ -211,15 +174,9 @@
 
         function showBrandDetail(brand) {
             const container = document.getElementById('page-content');
-            const brandModels = equipmentDatabase.filter(m => m.brand === brand);
-            let html = `
-                <button onclick="showPage('brands')" class="mb-6 flex items-center gap-2 text-slate-400 hover:text-white"><i class="fa-solid fa-arrow-left"></i> Back to Brands</button>
-                <div class="flex items-center gap-4 mb-8">
-                    <div class="w-16 h-16 bg-[#f97316] rounded-2xl flex items-center justify-center"><i class="fa-solid fa-industry text-4xl text-white"></i></div>
-                    <div><div class="text-5xl font-bold">${brand}</div><div class="text-xl text-slate-400">${brandModels.length} models</div></div>
-                </div>
-                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">`;
-            brandModels.forEach(model => html += createModelCardHTML(model));
+            const models = equipmentDatabase.filter(m => m.brand === brand);
+            let html = `<button onclick="showPage('brands')" class="mb-6 flex items-center gap-2 text-slate-400 hover:text-white"><i class="fa-solid fa-arrow-left"></i> Back to Brands</button><div class="flex items-center gap-4 mb-8"><div class="w-16 h-16 bg-[#f97316] rounded-2xl flex items-center justify-center"><i class="fa-solid fa-industry text-4xl text-white"></i></div><div><div class="text-5xl font-bold">${brand}</div><div class="text-xl text-slate-400">${models.length} models</div></div></div><div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">`;
+            models.forEach(m => html += createModelCardHTML(m));
             html += `</div>`;
             container.innerHTML = html;
         }
@@ -250,146 +207,15 @@
         function showModelDetail(id) {
             const model = equipmentDatabase.find(m => m.id === id);
             const container = document.getElementById('page-content');
-            container.innerHTML = `
-                <button onclick="showPage('models')" class="mb-6 flex items-center gap-2 text-slate-400 hover:text-white"><i class="fa-solid fa-arrow-left"></i> Back to Models</button>
-                <div class="bg-slate-900 rounded-3xl p-8">
-                    <div class="flex flex-col lg:flex-row gap-8">
-                        <div class="lg:w-2/3">
-                            <div class="flex gap-3 mb-4">
-                                <span class="px-4 py-1 bg-emerald-900 text-emerald-400 text-sm font-bold rounded-2xl">${model.year || ''} MODEL</span>
-                                <span class="px-4 py-1 bg-sky-900 text-sky-400 text-sm font-bold rounded-2xl">${model.category || model.subcategory || ''}</span>
-                            </div>
-                            <h1 class="text-5xl font-bold">${model.brand} ${model.model}</h1>
-                            <div class="text-3xl text-[#f97316] font-semibold mt-2">New: $${(model.new_price_usd || 0).toLocaleString()}</div>
-                        </div>
-                    </div>
-                </div>
-            `;
+            container.innerHTML = `<button onclick="showPage('models')" class="mb-6 flex items-center gap-2 text-slate-400 hover:text-white"><i class="fa-solid fa-arrow-left"></i> Back to Models</button><div class="bg-slate-900 rounded-3xl p-8"><h1 class="text-5xl font-bold">${model.brand} ${model.model}</h1><div class="text-3xl text-[#f97316] font-semibold mt-2">New: $${(model.new_price_usd || 0).toLocaleString()}</div></div>`;
         }
 
-        // ==================== COMPARE PAGE (NOW FULLY WORKING) ====================
+        // ==================== IMPROVED COMPARE PAGE ====================
         function renderCompare(container) {
             let html = `
                 <h2 class="section-header mb-4">Side-by-Side Comparison</h2>
-                <p class="text-slate-400 mb-6">Select up to 4 machines to compare specifications</p>
+                <p class="text-slate-400 mb-6">Select up to 4 machines to compare real specifications</p>
                 
                 <div class="bg-slate-900 p-6 rounded-3xl mb-6">
-                    <div class="text-sm text-slate-400 mb-3">Select machines to compare:</div>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">`;
-            
-            equipmentDatabase.forEach(model => {
-                const isSelected = compareList.some(m => m.id === model.id);
-                html += `
-                    <div onclick="toggleCompare(${model.id})" class="p-3 rounded-2xl cursor-pointer text-sm flex items-center gap-2 ${isSelected ? 'bg-[#f97316] text-white' : 'bg-slate-800 hover:bg-slate-700'}">
-                        <i class="fa-solid ${isSelected ? 'fa-check-circle' : 'fa-plus-circle'}"></i>
-                        <span>${model.brand} ${model.model}</span>
-                    </div>
-                `;
-            });
-            
-            html += `</div></div>`;
-            
-            // Show selected machines + Compare button
-            if (compareList.length > 0) {
-                html += `
-                    <div class="bg-slate-900 p-6 rounded-3xl mb-6">
-                        <div class="flex justify-between items-center mb-4">
-                            <div class="font-semibold">Selected for comparison (${compareList.length}/4)</div>
-                            <button onclick="performComparison()" class="px-8 py-3 bg-[#f97316] hover:bg-orange-600 text-white font-semibold rounded-2xl flex items-center gap-2">
-                                <i class="fa-solid fa-balance-scale"></i>
-                                <span>Compare Now</span>
-                            </button>
-                        </div>
-                        <div class="flex flex-wrap gap-3">`;
-                
-                compareList.forEach((model, index) => {
-                    html += `
-                        <div class="flex items-center gap-2 bg-slate-800 px-4 py-2 rounded-2xl">
-                            <span class="font-medium">${model.brand} ${model.model}</span>
-                            <button onclick="removeFromCompare(${index})" class="text-red-400 hover:text-red-500 ml-2">
-                                <i class="fa-solid fa-times"></i>
-                            </button>
-                        </div>
-                    `;
-                });
-                
-                html += `</div></div>`;
-            }
-            
-            container.innerHTML = html;
-        }
-
-        function toggleCompare(id) {
-            const index = compareList.findIndex(m => m.id === id);
-            if (index > -1) {
-                compareList.splice(index, 1);
-            } else if (compareList.length < 4) {
-                compareList.push(equipmentDatabase.find(m => m.id === id));
-            }
-            renderCompare(document.getElementById('page-content'));
-        }
-
-        function removeFromCompare(index) {
-            compareList.splice(index, 1);
-            renderCompare(document.getElementById('page-content'));
-        }
-
-        function performComparison() {
-            const container = document.getElementById('page-content');
-            
-            let html = `
-                <button onclick="showPage('compare')" class="mb-6 flex items-center gap-2 text-slate-400 hover:text-white"><i class="fa-solid fa-arrow-left"></i> Back to Selection</button>
-                <h2 class="section-header mb-8">Comparison Results</h2>
-                <div class="overflow-x-auto">
-                    <table class="w-full bg-slate-900 rounded-3xl overflow-hidden">
-                        <thead>
-                            <tr class="border-b border-slate-800">
-                                <th class="p-4 text-left">Specification</th>`;
-            
-            compareList.forEach(model => {
-                html += `<th class="p-4 text-center">${model.brand}<br><span class="font-normal text-sm">${model.model}</span></th>`;
-            });
-            
-            html += `</tr></thead><tbody>`;
-            
-            // Rows
-            const rows = [
-                { label: 'Category', key: 'category' },
-                { label: 'Year', key: 'year' },
-                { label: 'New Price (USD)', key: 'new_price_usd', format: v => '$' + (v || 0).toLocaleString() },
-            ];
-            
-            rows.forEach(row => {
-                html += `<tr class="border-b border-slate-800">`;
-                html += `<td class="p-4 font-medium">${row.label}</td>`;
-                
-                compareList.forEach(model => {
-                    let value = model[row.key] || '—';
-                    if (row.format) value = row.format(value);
-                    html += `<td class="p-4 text-center">${value}</td>`;
-                });
-                
-                html += `</tr>`;
-            });
-            
-            html += `</tbody></table></div>`;
-            
-            container.innerHTML = html;
-        }
-
-        function renderCompareOld(container) {
-            // This is the old placeholder version (kept for reference)
-        }
-
-        async function init() {
-            await loadDataFromSupabase();
-            const container = document.getElementById('page-content');
-            renderHome(container);
-            document.getElementById('btn-us').classList.add('bg-slate-700', 'text-white');
-            console.log('%c[SwipeIron] Full working Compare page loaded', 'color:#f97316');
-        }
-        
-        window.onload = init;
-    </script>
-</body>
-</html>
+                    <div class="text-sm text-slate-400 mb-3">Select machines:</div>
+                    <div class="grid grid-cols-2 md
