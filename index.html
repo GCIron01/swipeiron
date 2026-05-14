@@ -158,7 +158,43 @@
         }
 
         function renderHome(container) {
-            container.innerHTML = `<div class="text-center py-16"><h1 class="text-6xl font-display font-bold tracking-tighter mb-4">Swipe. Compare. Decide.</h1><p class="text-2xl text-slate-400">The definitive spec comparison platform for heavy equipment.</p></div>`;
+            container.innerHTML = `
+                <div class="text-center py-12">
+                    <h1 class="text-6xl font-display font-bold tracking-tighter mb-4">Swipe. Compare. Decide.</h1>
+                    <p class="text-2xl text-slate-400 max-w-2xl mx-auto">The definitive spec comparison platform for heavy equipment.</p>
+                </div>
+
+                <!-- BROWSE BY BRAND -->
+                <div class="mb-12">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-2xl font-semibold">Browse by Brand</h2>
+                        <a href="#" onclick="showPage('brands'); return false;" class="text-sm text-orange-400 hover:underline">View all brands →</a>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                        <a href="#" onclick="showPage('brands'); return false;" class="block bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-orange-500/40 p-5 rounded-2xl text-center transition-all">
+                            <div class="font-semibold text-lg">All Brands</div>
+                            <div class="text-xs text-slate-400 mt-1">Aerial + Construction</div>
+                        </a>
+                        <a href="#" onclick="showPage('aerial'); return false;" class="block bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-orange-500/40 p-5 rounded-2xl text-center transition-all">
+                            <div class="font-semibold text-lg">Aerial Brands</div>
+                            <div class="text-xs text-slate-400 mt-1">JLG, Genie, Skyjack...</div>
+                        </a>
+                        <a href="#" onclick="showPage('construction'); return false;" class="block bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-orange-500/40 p-5 rounded-2xl text-center transition-all">
+                            <div class="font-semibold text-lg">Construction Brands</div>
+                            <div class="text-xs text-slate-400 mt-1">Cat, Komatsu, Volvo...</div>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- DISCLAIMER -->
+                <div class="text-xs text-slate-500 border-t border-slate-800 pt-6 max-w-4xl">
+                    <p><strong>Disclaimer:</strong> SwipeIron is an independent platform and is not affiliated with, endorsed by, or sponsored by any equipment manufacturer. 
+                    All brand names, logos, and trademarks are the property of their respective owners. 
+                    The specifications and data shown on this site are for informational and comparison purposes only. While we strive for accuracy, 
+                    errors, omissions, or outdated information may occur. Always verify specifications directly with the manufacturer or official documentation before making any decisions.</p>
+                </div>
+            `;
         }
 
         function renderBrands(container) {
@@ -210,7 +246,6 @@
             container.innerHTML = `<button onclick="showPage('models')" class="mb-6 flex items-center gap-2 text-slate-400 hover:text-white"><i class="fa-solid fa-arrow-left"></i> Back to Models</button><div class="bg-slate-900 rounded-3xl p-8"><h1 class="text-5xl font-bold">${model.brand} ${model.model}</h1><div class="text-3xl text-[#f97316] font-semibold mt-2">New: $${(model.new_price_usd || 0).toLocaleString()}</div></div>`;
         }
 
-        // ==================== IMPROVED COMPARE PAGE ====================
         function renderCompare(container) {
             let html = `
                 <h2 class="section-header mb-4">Side-by-Side Comparison</h2>
@@ -288,11 +323,9 @@
             
             html += `</tr></thead><tbody>`;
             
-            // Smart specs based on type
             const isAerialComparison = compareList.some(m => m.category === 'Aerial' || (m.subcategory && m.subcategory.includes('Scissor')));
             
             if (isAerialComparison) {
-                // Aerial specs
                 const aerialRows = [
                     { label: 'Platform Height (ft)', key: 'platform_height_elevated_ft' },
                     { label: 'Platform Capacity (lbs)', key: 'platform_capacity_lbs' },
@@ -315,7 +348,6 @@
                     html += `</tr>`;
                 });
             } else {
-                // Construction specs
                 const constructionRows = [
                     { label: 'Operating Weight (lbs)', key: 'operating_weight_lbs' },
                     { label: 'Engine HP', key: 'engine_hp' },
