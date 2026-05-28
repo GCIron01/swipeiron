@@ -387,28 +387,62 @@
             const isAerialComparison = compareList.some(m => m.category === 'Aerial' || (m.subcategory && m.subcategory.includes('Scissor')));
             
             if (isAerialComparison) {
-                const aerialRows = [
-                    { label: 'Platform Height (ft)', key: 'platform_height_elevated_ft' },
-                    { label: 'Platform Capacity (lbs)', key: 'platform_capacity_lbs' },
-                    { label: 'Operating Weight (lbs)', key: 'operating_weight_lbs' },
-                    { label: 'Power Source', key: 'power_source' },
-                    { label: 'Gradeability (%)', key: 'gradeability_percent' },
-                    { label: 'Drive Speed Lowered (mph)', key: 'drive_speed_lowered_mph' },
-                    { label: 'Lift Time (seconds)', key: 'lift_time_seconds' },
-                ];
-                
-                aerialRows.forEach(row => {
-                    html += `<tr class="border-b border-slate-800"><td class="p-4 font-medium">${row.label}</td>`;
-                    compareList.forEach(model => {
-                        const specs = model.specs || {};
-                        let value = specs[row.key] || '—';
-                        if (row.key.includes('height') && value !== '—') value = value + ' ft';
-                        if (row.key.includes('capacity') || row.key.includes('weight')) value = value.toLocaleString() + ' lbs';
-                        html += `<td class="p-4 text-center font-semibold text-[#f97316]">${value}</td>`;
-                    });
-                    html += `</tr>`;
-                });
-            } else {
+    const aerialRows = [
+        { 
+            label: 'Platform Height (ft)', 
+            keys: ['platform_height_elevated_ft', 'platform_height_ft'] 
+        },
+        { 
+            label: 'Platform Capacity (lbs)', 
+            keys: ['platform_capacity_lbs', 'platform_capacity_restricted_lbs', 'platform_capacity_unrestricted_lbs'] 
+        },
+        { 
+            label: 'Operating Weight (lbs)', 
+            keys: ['operating_weight_lbs', 'weight_lbs'] 
+        },
+        { 
+            label: 'Power Source', 
+            keys: ['power_source'] 
+        },
+        { 
+            label: 'Gradeability (%)', 
+            keys: ['gradeability_percent', 'gradeability_4wd_percent', 'gradeability_2wd_percent'] 
+        },
+        { 
+            label: 'Drive Speed (mph)', 
+            keys: ['drive_speed_mph', 'drive_speed_lowered_mph'] 
+        },
+    ];
+    
+    aerialRows.forEach(row => {
+        html += `<tr class="border-b border-slate-800"><td class="p-4 font-medium">${row.label}</td>`;
+        compareList.forEach(model => {
+            const specs = model.specs || {};
+            
+            // Try multiple keys until we find a value
+            let value = '—';
+            for (let key of row.keys) {
+                if (specs[key]) {
+                    value = specs[key];
+                    break;
+                }
+            }
+            
+            // Format nicely
+            if (value !== '—') {
+                if (row.label.includes('Height')) value = value + ' ft';
+                if (row.label.includes('Capacity') || row.label.includes('Weight')) {
+                    value = value.toLocaleString() + ' lbs';
+                }
+                if (row.label.includes('Gradeability')) value = value + '%';
+                if (row.label.includes('Speed')) value = value + ' mph';
+            }
+            
+            html += `<td class="p-4 text-center font-semibold text-[#f97316]">${value}</td>`;
+        });
+        html += `</tr>`;
+    });
+} else {
                 const constructionRows = [
                     { label: 'Operating Weight (lbs)', key: 'operating_weight_lbs' },
                     { label: 'Engine HP', key: 'engine_hp' },
