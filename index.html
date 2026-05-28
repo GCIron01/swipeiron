@@ -100,16 +100,28 @@
     if (isAerial) {
         let height = specs.platform_height_elevated_ft || specs.platform_height_ft || 0;
         
-        // === IMPROVED CAPACITY LOGIC ===
+        // Improved capacity logic
         let capacity = specs.platform_capacity_lbs 
             || specs.platform_capacity_restricted_lbs 
             || specs.platform_capacity_unrestricted_lbs 
             || 0;
 
         let weight = specs.operating_weight_lbs || specs.weight_lbs || 0;
-        let powerType = model.subcategory && model.subcategory.includes('Engine') ? 'Engine' : 'Electric';
 
-        // Check if we should show asterisk (restricted + unrestricted exist and are different)
+        // === IMPROVED POWER TYPE LOGIC (with Hybrid support) ===
+        let powerType = 'Electric';
+        let powerColor = 'bg-emerald-900 text-emerald-400';
+
+        if (model.subcategory && model.subcategory.includes('Hybrid')) {
+            powerType = 'Hybrid';
+            powerColor = 'bg-purple-900 text-purple-400';
+        } 
+        else if (model.subcategory && model.subcategory.includes('Engine')) {
+            powerType = 'Engine';
+            powerColor = 'bg-amber-900 text-amber-400';
+        }
+
+        // Check if we should show asterisk (for machines with restricted + unrestricted capacity)
         const hasRestricted = specs.platform_capacity_restricted_lbs && specs.platform_capacity_unrestricted_lbs;
         const showAsterisk = hasRestricted && 
             (specs.platform_capacity_restricted_lbs !== specs.platform_capacity_unrestricted_lbs);
@@ -126,7 +138,6 @@
         
         const displayHeight = height > 0 ? height : '—';
         
-        // Display capacity with optional asterisk
         let displayCapacity = capacity > 0 ? capacity.toLocaleString() : '—';
         if (showAsterisk && currentUnit === 'us') {
             displayCapacity = displayCapacity + ' *';
@@ -141,7 +152,7 @@
                         <div class="text-xs text-orange-500 font-semibold">${model.subcategory || 'Aerial'}</div>
                         <div class="font-bold text-xl">${model.brand} ${model.model}</div>
                     </div>
-                    <div class="px-3 py-1 text-xs rounded-full ${powerType === 'Electric' ? 'bg-emerald-900 text-emerald-400' : 'bg-amber-900 text-amber-400'}">${powerType}</div>
+                    <div class="px-3 py-1 text-xs rounded-full ${powerColor}">${powerType}</div>
                 </div>
                 <div class="grid grid-cols-3 gap-4 text-center">
                     <div>
