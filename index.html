@@ -56,6 +56,7 @@
         let currentUnit = 'us';
         let compareList = [];
         let currentPage = 'home';
+        let currentBrand = null;
 
         async function loadDataFromSupabase() {
             const { data, error } = await supabaseClient.from('equipment_models').select('*').order('brand', { ascending: true });
@@ -64,24 +65,34 @@
         }
 
         function switchUnit(unit) {
-            currentUnit = unit;
-            const btnUs = document.getElementById('btn-us');
-            const btnMetric = document.getElementById('btn-metric');
-            
-            if (unit === 'us') {
-                btnUs.classList.add('bg-slate-700', 'text-white'); btnUs.classList.remove('text-slate-400');
-                btnMetric.classList.remove('bg-slate-700', 'text-white'); btnMetric.classList.add('text-slate-400');
-            } else {
-                btnMetric.classList.add('bg-slate-700', 'text-white'); btnMetric.classList.remove('text-slate-400');
-                btnUs.classList.remove('bg-slate-700', 'text-white'); btnUs.classList.add('text-slate-400');
-            }
-            
-            const container = document.getElementById('page-content');
-            if (currentPage === 'compare') renderCompare(container);
-            else if (currentPage === 'construction') renderConstruction(container);
-            else if (currentPage === 'aerial') renderAerial(container);
-        }
-
+    currentUnit = unit;
+    const btnUs = document.getElementById('btn-us');
+    const btnMetric = document.getElementById('btn-metric');
+    
+    if (unit === 'us') {
+        btnUs.classList.add('bg-slate-700', 'text-white'); btnUs.classList.remove('text-slate-400');
+        btnMetric.classList.remove('bg-slate-700', 'text-white'); btnMetric.classList.add('text-slate-400');
+    } else {
+        btnMetric.classList.add('bg-slate-700', 'text-white'); btnMetric.classList.remove('text-slate-400');
+        btnUs.classList.remove('bg-slate-700', 'text-white'); btnUs.classList.add('text-slate-400');
+    }
+    
+    const container = document.getElementById('page-content');
+    
+    if (currentPage === 'compare') {
+        renderCompare(container);
+    } 
+    else if (currentPage === 'construction') {
+        renderConstruction(container);
+    } 
+    else if (currentPage === 'aerial') {
+        renderAerial(container);
+    } 
+    else if (currentPage === 'brand-detail' && currentBrand) {
+        // This fixes the toggle when inside a brand page (e.g. Brands → JLG)
+        showBrandDetail(currentBrand);
+    }
+}
         function createModelCardHTML(model) {
     const specs = model.specs || {};
     const isAerial = model.category === 'Aerial' || (model.subcategory && model.subcategory.includes('Scissor'));
@@ -245,6 +256,9 @@
         }
 
         function showBrandDetail(brand) {
+            currentBrand = brand;
+            currentPage = 'brand-detail';
+            
             const container = document.getElementById('page-content');
             const models = equipmentDatabase.filter(m => m.brand === brand);
             let html = `<button onclick="showPage('brands')" class="mb-6 flex items-center gap-2 text-slate-400 hover:text-white"><i class="fa-solid fa-arrow-left"></i> Back to Brands</button><div class="flex items-center gap-4 mb-8"><div class="w-16 h-16 bg-[#f97316] rounded-2xl flex items-center justify-center"><i class="fa-solid fa-industry text-4xl text-white"></i></div><div><div class="text-5xl font-bold">${brand}</div><div class="text-xl text-slate-400">${models.length} models</div></div></div><div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">`;
