@@ -96,19 +96,17 @@
         function createModelCardHTML(model) {
     const specs = model.specs || {};
     const isAerial = model.category === 'Aerial' || (model.subcategory && model.subcategory.includes('Scissor'));
-   
+    const isMaterialHandling = model.category === 'Material Handling';
+
+    // ==================== AERIAL CARDS ====================
     if (isAerial) {
         let height = specs.platform_height_elevated_ft || specs.platform_height_ft || 0;
-        
-        // Improved capacity logic
         let capacity = specs.platform_capacity_lbs 
             || specs.platform_capacity_restricted_lbs 
             || specs.platform_capacity_unrestricted_lbs 
             || 0;
-
         let weight = specs.operating_weight_lbs || specs.weight_lbs || 0;
 
-        // === IMPROVED POWER TYPE LOGIC (with Hybrid support) ===
         let powerType = 'Electric';
         let powerColor = 'bg-emerald-900 text-emerald-400';
 
@@ -121,30 +119,24 @@
             powerColor = 'bg-amber-900 text-amber-400';
         }
 
-        // Check if we should show asterisk (for machines with restricted + unrestricted capacity)
         const hasRestricted = specs.platform_capacity_restricted_lbs && specs.platform_capacity_unrestricted_lbs;
-        const showAsterisk = hasRestricted && 
-            (specs.platform_capacity_restricted_lbs !== specs.platform_capacity_unrestricted_lbs);
+        const showAsterisk = hasRestricted && (specs.platform_capacity_restricted_lbs !== specs.platform_capacity_unrestricted_lbs);
 
         if (currentUnit === 'metric') {
             height = height > 0 ? (height * 0.3048).toFixed(1) : 0;
             capacity = capacity > 0 ? Math.round(capacity * 0.4536) : 0;
             weight = weight > 0 ? Math.round(weight * 0.4536) : 0;
         }
-       
+
         const hUnit = currentUnit === 'us' ? 'ft' : 'm';
         const cUnit = currentUnit === 'us' ? 'lbs' : 'kg';
         const wUnit = currentUnit === 'us' ? 'lbs' : 'kg';
-        
+
         const displayHeight = height > 0 ? height : '—';
-        
         let displayCapacity = capacity > 0 ? capacity.toLocaleString() : '—';
-        if (showAsterisk && currentUnit === 'us') {
-            displayCapacity = displayCapacity + ' *';
-        }
-        
+        if (showAsterisk && currentUnit === 'us') displayCapacity = displayCapacity + ' *';
         const displayWeight = weight > 0 ? weight.toLocaleString() : '—';
-       
+
         return `
             <div onclick="showModelDetail(${model.id})" class="equipment-card bg-slate-900 hover:bg-slate-800 p-6 rounded-3xl cursor-pointer border border-slate-800">
                 <div class="flex justify-between items-start mb-4">
@@ -176,12 +168,69 @@
                 </div>
             </div>
         `;
-    } else {
-        // Construction equipment cards (unchanged)
+    }
+
+    // ==================== MATERIAL HANDLING (TELEHANDLERS) ====================
+    else if (isMaterialHandling) {
+        let liftHeight = specs.max_lift_height_ft || 0;
+        let capacity = specs.rated_capacity_lbs || 0;
+        let weight = specs.operating_weight_lbs || 0;
+        let engineHp = specs.engine_gross_hp || specs.engine_hp || 0;
+
+        if (currentUnit === 'metric') {
+            liftHeight = liftHeight > 0 ? (liftHeight * 0.3048).toFixed(1) : 0;
+            capacity = capacity > 0 ? Math.round(capacity * 0.4536) : 0;
+            weight = weight > 0 ? Math.round(weight * 0.4536) : 0;
+        }
+
+        const hUnit = currentUnit === 'us' ? 'ft' : 'm';
+        const cUnit = currentUnit === 'us' ? 'lbs' : 'kg';
+        const wUnit = currentUnit === 'us' ? 'lbs' : 'kg';
+
+        const displayHeight = liftHeight > 0 ? liftHeight : '—';
+        const displayCapacity = capacity > 0 ? capacity.toLocaleString() : '—';
+        const displayWeight = weight > 0 ? weight.toLocaleString() : '—';
+        const displayHp = engineHp > 0 ? engineHp : '—';
+
+        return `
+            <div onclick="showModelDetail(${model.id})" class="equipment-card bg-slate-900 hover:bg-slate-800 p-6 rounded-3xl cursor-pointer border border-slate-800">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <div class="text-xs text-orange-500 font-semibold">${model.subcategory || 'Material Handling'}</div>
+                        <div class="font-bold text-xl">${model.brand} ${model.model}</div>
+                    </div>
+                    <div class="px-3 py-1 text-xs rounded-full bg-amber-900 text-amber-400">Engine</div>
+                </div>
+                <div class="grid grid-cols-3 gap-4 text-center">
+                    <div>
+                        <div class="text-xs text-slate-500">Max Lift Height</div>
+                        <div class="text-2xl font-bold text-[#f97316]">${displayHeight}</div>
+                        <div class="text-xs text-slate-500">${hUnit}</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-500">Rated Capacity</div>
+                        <div class="text-2xl font-bold text-[#f97316]">${displayCapacity}</div>
+                        <div class="text-xs text-slate-500">${cUnit}</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-500">Operating Weight</div>
+                        <div class="text-2xl font-bold text-[#f97316]">${displayWeight}</div>
+                        <div class="text-xs text-slate-500">${wUnit}</div>
+                    </div>
+                </div>
+                <div class="mt-5 pt-4 border-t border-slate-800 flex justify-between text-xs text-slate-400">
+                    <div>Click for full specs →</div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ==================== CONSTRUCTION (DEFAULT) ====================
+    else {
         const weight = model.operating_weight_lbs || specs.operating_weight_lbs || '—';
         const hp = model.engine_hp || specs.engine_hp || '—';
         const bucket = model.bucket_capacity_cy || specs.bucket_capacity_cy || '—';
-       
+
         return `
             <div onclick="showModelDetail(${model.id})" class="equipment-card bg-slate-900 hover:bg-slate-800 p-6 rounded-3xl cursor-pointer border border-slate-800">
                 <div class="flex justify-between">
@@ -203,7 +252,6 @@
         `;
     }
 }
-
         function showPage(page) {
             currentPage = page;
             const container = document.getElementById('page-content');
