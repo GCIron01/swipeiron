@@ -170,79 +170,78 @@
         `;
     }
 
-    // ==================== MATERIAL HANDLING (TELEHANDLERS) ====================
     else if (isMaterialHandling) {
-        let liftHeight = specs.max_lift_height_ft || 0;
-        let capacity = specs.rated_capacity_lbs || 0;
-        let weight = specs.operating_weight_lbs || 0;
-        let engineHp = specs.engine_gross_hp || specs.engine_hp || 0;
+    let liftHeight = specs.max_lift_height_ft || 0;
+    let capacity = specs.rated_capacity_lbs || 0;
+    let weight = specs.operating_weight_lbs || 0;
+    let engineHp = specs.engine_gross_hp || specs.engine_hp || 0;
 
-        if (currentUnit === 'metric') {
-            liftHeight = liftHeight > 0 ? (liftHeight * 0.3048).toFixed(1) : 0;
-            capacity = capacity > 0 ? Math.round(capacity * 0.4536) : 0;
-            weight = weight > 0 ? Math.round(weight * 0.4536) : 0;
-        }
+    if (currentUnit === 'metric') {
+        liftHeight = liftHeight > 0 ? (liftHeight * 0.3048).toFixed(1) : 0;
+        capacity = capacity > 0 ? Math.round(capacity * 0.4536) : 0;
+        weight = weight > 0 ? Math.round(weight * 0.4536) : 0;
+    }
 
-        const hUnit = currentUnit === 'us' ? 'ft' : 'm';
-        const cUnit = currentUnit === 'us' ? 'lbs' : 'kg';
-        const wUnit = currentUnit === 'us' ? 'lbs' : 'kg';
+    const hUnit = currentUnit === 'us' ? 'ft' : 'm';
+    const cUnit = currentUnit === 'us' ? 'lbs' : 'kg';
+    const wUnit = currentUnit === 'us' ? 'lbs' : 'kg';
 
-        const displayHeight = liftHeight > 0 ? liftHeight : '—';
-        const displayCapacity = capacity > 0 ? capacity.toLocaleString() : '—';
-        const displayWeight = weight > 0 ? weight.toLocaleString() : '—';
-        const displayHp = engineHp > 0 ? engineHp : '—';
+    const displayHeight = liftHeight > 0 ? liftHeight : '—';
+    const displayCapacity = capacity > 0 ? capacity.toLocaleString() : '—';
+    const displayWeight = weight > 0 ? weight.toLocaleString() : '—';
+    const displayHp = engineHp > 0 ? engineHp : '—';
 
-        return `
-            <div onclick="showModelDetail(${model.id})" class="equipment-card bg-slate-900 hover:bg-slate-800 p-6 rounded-3xl cursor-pointer border border-slate-800">
-                <div class="flex justify-between items-start mb-4">
-                    <div>
-                        <div class="text-xs text-orange-500 font-semibold">${model.subcategory || 'Material Handling'}</div>
-                        <div class="font-bold text-xl">${model.brand} ${model.model}</div>
+    // Determine badge style based on subcategory
+    const isRotating = model.subcategory === 'Rotating Telehandler';
+    const subcategoryBadge = isRotating 
+        ? `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-violet-600 text-white">${model.subcategory}</span>`
+        : `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-700 text-slate-200">${model.subcategory || 'Telehandler'}</span>`;
+
+    const rotating360Badge = isRotating 
+        ? `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-violet-500/20 text-violet-400 border border-violet-500/30">
+                <i class="fa-solid fa-sync fa-spin-pulse"></i>
+                <span>360°</span>
+           </span>` 
+        : '';
+
+    return `
+        <div onclick="showModelDetail(${model.id})" class="equipment-card bg-slate-900 hover:bg-slate-800 p-6 rounded-3xl cursor-pointer border border-slate-800">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <!-- Subcategory Badge + 360° Indicator -->
+                    <div class="flex items-center gap-2 mb-1">
+                        ${subcategoryBadge}
+                        ${rotating360Badge}
                     </div>
-                    <div class="px-3 py-1 text-xs rounded-full bg-amber-900 text-amber-400">Engine</div>
+                    <div class="font-bold text-xl">${model.brand} ${model.model}</div>
                 </div>
-                <div class="grid grid-cols-3 gap-4 text-center">
-                    <div>
-                        <div class="text-xs text-slate-500">Max Lift Height</div>
-                        <div class="text-2xl font-bold text-[#f97316]">${displayHeight}</div>
-                        <div class="text-xs text-slate-500">${hUnit}</div>
-                    </div>
-                    <div>
-                        <div class="text-xs text-slate-500">Rated Capacity</div>
-                        <div class="text-2xl font-bold text-[#f97316]">${displayCapacity}</div>
-                        <div class="text-xs text-slate-500">${cUnit}</div>
-                    </div>
-                    <div>
-                        <div class="text-xs text-slate-500">Operating Weight</div>
-                        <div class="text-2xl font-bold text-[#f97316]">${displayWeight}</div>
-                        <div class="text-xs text-slate-500">${wUnit}</div>
-                    </div>
+                <div class="px-3 py-1 text-xs rounded-full bg-amber-900 text-amber-400">Engine</div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4 text-center">
+                <div>
+                    <div class="text-xs text-slate-500">Max Lift Height</div>
+                    <div class="text-2xl font-bold text-[#f97316]">${displayHeight}</div>
+                    <div class="text-xs text-slate-500">${hUnit}</div>
                 </div>
-                <div class="mt-5 pt-4 border-t border-slate-800 flex justify-between text-xs text-slate-400">
-                    <div>Click for full specs →</div>
+                <div>
+                    <div class="text-xs text-slate-500">Rated Capacity</div>
+                    <div class="text-2xl font-bold text-[#f97316]">${displayCapacity}</div>
+                    <div class="text-xs text-slate-500">${cUnit}</div>
+                </div>
+                <div>
+                    <div class="text-xs text-slate-500">Operating Weight</div>
+                    <div class="text-2xl font-bold text-[#f97316]">${displayWeight}</div>
+                    <div class="text-xs text-slate-500">${wUnit}</div>
                 </div>
             </div>
-        `;
-    }
-<!-- Subcategory Badge + Rotating Indicator -->
-<div class="flex items-center gap-2 mb-3">
-    <!-- Subcategory Badge -->
-    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold 
-        ${model.subcategory === 'Rotating Telehandler' 
-            ? 'bg-violet-600 text-white' 
-            : 'bg-slate-700 text-slate-200'}">
-        ${model.subcategory}
-    </span>
 
-    <!-- 360° Rotation Badge (only for Rotating Telehandlers) -->
-    ${model.subcategory === 'Rotating Telehandler' ? `
-        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold 
-            bg-violet-500/20 text-violet-400 border border-violet-500/30">
-            <i class="fa-solid fa-sync fa-spin-pulse"></i>
-            <span>360°</span>
-        </span>
-    ` : ''}
-</div>
+            <div class="mt-5 pt-4 border-t border-slate-800 flex justify-between text-xs text-slate-400">
+                <div>Click for full specs →</div>
+            </div>
+        </div>
+    `;
+}
     // ==================== CONSTRUCTION (DEFAULT) ====================
     else {
         const weight = model.operating_weight_lbs || specs.operating_weight_lbs || '—';
