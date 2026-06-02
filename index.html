@@ -101,22 +101,43 @@
     // ==================== AERIAL CARDS ====================
     if (isAerial) {
         let height = specs.platform_height_elevated_ft || specs.platform_height_ft || 0;
-        let capacity = specs.platform_capacity_lbs 
-            || specs.platform_capacity_restricted_lbs 
-            || specs.platform_capacity_unrestricted_lbs 
+        let capacity = specs.platform_capacity_lbs
+            || specs.platform_capacity_restricted_lbs
+            || specs.platform_capacity_unrestricted_lbs
             || 0;
         let weight = specs.operating_weight_lbs || specs.weight_lbs || 0;
 
+        // ==================== POWER BADGE LOGIC ====================
         let powerType = 'Electric';
         let powerColor = 'bg-emerald-900 text-emerald-400';
 
-        if (model.subcategory && model.subcategory.includes('Hybrid')) {
+        // Special handling for Towable Boom Lifts (uses power_source field)
+        if (model.subcategory === 'Towable Boom Lift') {
+            if (model.power_source === 'Hybrid') {
+                powerType = 'Hybrid';
+                powerColor = 'bg-purple-900 text-purple-400';
+            } else if (model.power_source === 'Engine') {
+                powerType = 'Engine';
+                powerColor = 'bg-amber-900 text-amber-400';
+            } else {
+                powerType = 'Electric';
+                powerColor = 'bg-emerald-900 text-emerald-400';
+            }
+        } 
+        // Existing logic for other Aerial subcategories
+        else if (model.subcategory && model.subcategory.includes('Hybrid')) {
             powerType = 'Hybrid';
             powerColor = 'bg-purple-900 text-purple-400';
         } 
         else if (model.subcategory && model.subcategory.includes('Engine')) {
             powerType = 'Engine';
             powerColor = 'bg-amber-900 text-amber-400';
+        }
+
+        // Clean model name for Towable Boom Lifts
+        let displayModel = `${model.brand} ${model.model}`;
+        if (model.subcategory === 'Towable Boom Lift') {
+            displayModel = `${model.brand} ${model.model.replace(/\s*\(Electric\)|\s*\(Hybrid\)|\s*\(Engine\)/gi, '')}`;
         }
 
         const hasRestricted = specs.platform_capacity_restricted_lbs && specs.platform_capacity_unrestricted_lbs;
@@ -142,7 +163,7 @@
                 <div class="flex justify-between items-start mb-4">
                     <div>
                         <div class="text-xs text-orange-500 font-semibold">${model.subcategory || 'Aerial'}</div>
-                        <div class="font-bold text-xl">${model.brand} ${model.model}</div>
+                        <div class="font-bold text-xl">${displayModel}</div>
                     </div>
                     <div class="px-3 py-1 text-xs rounded-full ${powerColor}">${powerType}</div>
                 </div>
@@ -169,7 +190,7 @@
             </div>
         `;
     }
-
+    
     else if (isMaterialHandling) {
     let liftHeight = specs.max_lift_height_ft || 0;
     let capacity = specs.rated_capacity_lbs || 0;
