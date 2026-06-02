@@ -224,7 +224,25 @@
             </div>
         `;
     }
+<!-- Subcategory Badge + Rotating Indicator -->
+<div class="flex items-center gap-2 mb-3">
+    <!-- Subcategory Badge -->
+    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold 
+        ${model.subcategory === 'Rotating Telehandler' 
+            ? 'bg-violet-600 text-white' 
+            : 'bg-slate-700 text-slate-200'}">
+        ${model.subcategory}
+    </span>
 
+    <!-- 360° Rotation Badge (only for Rotating Telehandlers) -->
+    ${model.subcategory === 'Rotating Telehandler' ? `
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold 
+            bg-violet-500/20 text-violet-400 border border-violet-500/30">
+            <i class="fa-solid fa-sync fa-spin-pulse"></i>
+            <span>360°</span>
+        </span>
+    ` : ''}
+</div>
     // ==================== CONSTRUCTION (DEFAULT) ====================
     else {
         const weight = model.operating_weight_lbs || specs.operating_weight_lbs || '—';
