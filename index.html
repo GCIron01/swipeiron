@@ -302,6 +302,23 @@
         }
 
         function renderHome(container) {
+            if (page === 'compare') {
+    let html = `
+        <div class="max-w-7xl mx-auto px-6 py-8">
+            
+            <!-- INSERT THE INFO BOX HERE -->
+            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 mb-6">
+                <div class="flex items-start gap-3">
+                    <i class="fa-solid fa-info-circle text-orange-500 mt-1"></i>
+                    <div class="text-sm text-slate-300">
+                        <span class="font-semibold text-white">How Compare Works:</span><br>
+                        You can only compare machines within the <span class="text-orange-400">same subcategory</span>. 
+                        For example, you can compare multiple Telehandlers together, but not a Telehandler with a Scissor Lift.
+                        <br><br>
+                        <span class="text-slate-400">Tip:</span> You can compare up to 4 machines at once.
+                    </div>
+                </div>
+            </div>
             container.innerHTML = `
                 <div class="text-center py-12">
                     <h1 class="text-6xl font-display font-bold tracking-tighter mb-4">Swipe. Compare. Decide.</h1>
