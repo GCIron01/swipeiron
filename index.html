@@ -84,11 +84,14 @@
 
     const container = document.getElementById('page-content');
 
+    // Re-render the correct view based on current state
     if (currentPage === 'compare') {
+        // If user is on the normal compare selection screen
         renderCompare(container);
     } 
     else if (document.querySelector('button[onclick*="showPage(\'compare\')"]') && 
              container.innerHTML.includes('Comparison Results')) {
+        // If user is viewing Comparison Results, re-render the comparison
         performComparison();
     } 
     else if (currentPage === 'construction') {
