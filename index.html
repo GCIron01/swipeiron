@@ -66,21 +66,30 @@
 
         function switchUnit(unit) {
     currentUnit = unit;
+
     const btnUs = document.getElementById('btn-us');
     const btnMetric = document.getElementById('btn-metric');
-    
+
     if (unit === 'us') {
-        btnUs.classList.add('bg-slate-700', 'text-white'); btnUs.classList.remove('text-slate-400');
-        btnMetric.classList.remove('bg-slate-700', 'text-white'); btnMetric.classList.add('text-slate-400');
+        btnUs.classList.add('bg-slate-700', 'text-white');
+        btnUs.classList.remove('text-slate-400');
+        btnMetric.classList.remove('bg-slate-700', 'text-white');
+        btnMetric.classList.add('text-slate-400');
     } else {
-        btnMetric.classList.add('bg-slate-700', 'text-white'); btnMetric.classList.remove('text-slate-400');
-        btnUs.classList.remove('bg-slate-700', 'text-white'); btnUs.classList.add('text-slate-400');
+        btnMetric.classList.add('bg-slate-700', 'text-white');
+        btnMetric.classList.remove('text-slate-400');
+        btnUs.classList.remove('bg-slate-700', 'text-white');
+        btnUs.classList.add('text-slate-400');
     }
-    
+
     const container = document.getElementById('page-content');
-    
+
     if (currentPage === 'compare') {
         renderCompare(container);
+    } 
+    else if (document.querySelector('button[onclick*="showPage(\'compare\')"]') && 
+             container.innerHTML.includes('Comparison Results')) {
+        performComparison();
     } 
     else if (currentPage === 'construction') {
         renderConstruction(container);
@@ -89,7 +98,6 @@
         renderAerial(container);
     } 
     else if (currentPage === 'brand-detail' && currentBrand) {
-        // This fixes the toggle when inside a brand page (e.g. Brands → JLG)
         showBrandDetail(currentBrand);
     }
 }
