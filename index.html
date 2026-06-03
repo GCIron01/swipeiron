@@ -518,11 +518,35 @@ function buildSpecsList(specs) {
         }
 
         function toggleCompare(id) {
-            const index = compareList.findIndex(m => m.id === id);
-            if (index > -1) compareList.splice(index, 1);
-            else if (compareList.length < 4) compareList.push(equipmentDatabase.find(m => m.id === id));
-            renderCompare(document.getElementById('page-content'));
+    const model = equipmentDatabase.find(m => m.id === id);
+    if (!model) return;
+
+    const index = compareList.findIndex(m => m.id === id);
+
+    // If already selected → remove it
+    if (index > -1) {
+        compareList.splice(index, 1);
+    } 
+    else {
+        // Check if we can add this machine
+        if (compareList.length > 0) {
+            const existingSubcategory = compareList[0].subcategory;
+            
+            if (model.subcategory !== existingSubcategory) {
+                showToast(`You can only compare machines in the same subcategory (${existingSubcategory}).`, true);
+                return;
+            }
         }
+
+        if (compareList.length < 4) {
+            compareList.push(model);
+        } else {
+            showToast('You can only compare up to 4 machines at a time.');
+        }
+    }
+
+    renderCompare(document.getElementById('page-content'));
+}
 
         function removeFromCompare(index) {
             compareList.splice(index, 1);
