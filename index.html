@@ -302,60 +302,44 @@
         }
 
         function renderHome(container) {
-            if (page === 'compare') {
-    let html = `
-        <div class="max-w-7xl mx-auto px-6 py-8">
-            
-            <!-- INSERT THE INFO BOX HERE -->
-            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 mb-6">
-                <div class="flex items-start gap-3">
-                    <i class="fa-solid fa-info-circle text-orange-500 mt-1"></i>
-                    <div class="text-sm text-slate-300">
-                        <span class="font-semibold text-white">How Compare Works:</span><br>
-                        You can only compare machines within the <span class="text-orange-400">same subcategory</span>. 
-                        For example, you can compare multiple Telehandlers together, but not a Telehandler with a Scissor Lift.
-                        <br><br>
-                        <span class="text-slate-400">Tip:</span> You can compare up to 4 machines at once.
-                    </div>
-                </div>
+    container.innerHTML = `
+        <div class="text-center py-12">
+            <h1 class="text-6xl font-display font-bold tracking-tighter mb-4">Swipe. Compare. Decide.</h1>
+            <p class="text-2xl text-slate-400 max-w-2xl mx-auto">The definitive spec comparison platform for heavy equipment.</p>
+        </div>
+
+        <!-- BROWSE BY BRAND -->
+        <div class="mb-12">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-semibold">Browse by Brand</h2>
+                <a href="#" onclick="showPage('brands'); return false;" class="text-sm text-orange-400 hover:underline">View all brands →</a>
             </div>
-            container.innerHTML = `
-                <div class="text-center py-12">
-                    <h1 class="text-6xl font-display font-bold tracking-tighter mb-4">Swipe. Compare. Decide.</h1>
-                    <p class="text-2xl text-slate-400 max-w-2xl mx-auto">The definitive spec comparison platform for heavy equipment.</p>
-                </div>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <a href="#" onclick="showPage('brands'); return false;" class="block bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-orange-500/40 p-5 rounded-2xl text-center transition-all">
+                    <div class="font-semibold text-lg">All Brands</div>
+                    <div class="text-xs text-slate-400 mt-1">Aerial + Construction</div>
+                </a>
+                <a href="#" onclick="showPage('aerial'); return false;" class="block bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-orange-500/40 p-5 rounded-2xl text-center transition-all">
+                    <div class="font-semibold text-lg">Aerial Brands</div>
+                    <div class="text-xs text-slate-400 mt-1">JLG, Genie, Skyjack...</div>
+                </a>
+                <a href="#" onclick="showPage('construction'); return false;" class="block bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-orange-500/40 p-5 rounded-2xl text-center transition-all">
+                    <div class="font-semibold text-lg">Construction Brands</div>
+                    <div class="text-xs text-slate-400 mt-1">Cat, Komatsu, Volvo...</div>
+                </a>
+            </div>
+        </div>
 
-                <!-- BROWSE BY BRAND -->
-                <div class="mb-12">
-                    <div class="flex items-center justify-between mb-6">
-                        <h2 class="text-2xl font-semibold">Browse by Brand</h2>
-                        <a href="#" onclick="showPage('brands'); return false;" class="text-sm text-orange-400 hover:underline">View all brands →</a>
-                    </div>
-                    
-                    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                        <a href="#" onclick="showPage('brands'); return false;" class="block bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-orange-500/40 p-5 rounded-2xl text-center transition-all">
-                            <div class="font-semibold text-lg">All Brands</div>
-                            <div class="text-xs text-slate-400 mt-1">Aerial + Construction</div>
-                        </a>
-                        <a href="#" onclick="showPage('aerial'); return false;" class="block bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-orange-500/40 p-5 rounded-2xl text-center transition-all">
-                            <div class="font-semibold text-lg">Aerial Brands</div>
-                            <div class="text-xs text-slate-400 mt-1">JLG, Genie, Skyjack...</div>
-                        </a>
-                        <a href="#" onclick="showPage('construction'); return false;" class="block bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-orange-500/40 p-5 rounded-2xl text-center transition-all">
-                            <div class="font-semibold text-lg">Construction Brands</div>
-                            <div class="text-xs text-slate-400 mt-1">Cat, Komatsu, Volvo...</div>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- DISCLAIMER -->
-                <div class="text-xs text-slate-500 border-t border-slate-800 pt-6 max-w-4xl">
-                    <p><strong>Disclaimer:</strong> SwipeIron is an independent platform and is not affiliated with, endorsed by, or sponsored by any equipment manufacturer. 
-                    All brand names, logos, and trademarks are the property of their respective owners. 
-                    The specifications and data shown on this site are for informational and comparison purposes only. While we strive for accuracy, 
-                    errors, omissions, or outdated information may occur. Always verify specifications directly with the manufacturer or official documentation before making any decisions.</p>
-                </div>
-            `;
+        <!-- DISCLAIMER -->
+        <div class="text-xs text-slate-500 border-t border-slate-800 pt-6 max-w-4xl">
+            <p><strong>Disclaimer:</strong> SwipeIron is an independent platform and is not affiliated with, endorsed by, or sponsored by any equipment manufacturer. 
+            All brand names, logos, and trademarks are the property of their respective owners. 
+            The specifications and data shown on this site are for informational and comparison purposes only. While we strive for accuracy, 
+            errors, omissions, or outdated information may occur. Always verify specifications directly with the manufacturer or official documentation before making any decisions.</p>
+        </div>
+    `;
+}
         }
 
         function renderBrands(container) {
