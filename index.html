@@ -388,10 +388,87 @@
         }
 
         function showModelDetail(id) {
-            const model = equipmentDatabase.find(m => m.id === id);
-            const container = document.getElementById('page-content');
-            container.innerHTML = `<button onclick="showPage('models')" class="mb-6 flex items-center gap-2 text-slate-400 hover:text-white"><i class="fa-solid fa-arrow-left"></i> Back to Models</button><div class="bg-slate-900 rounded-3xl p-8"><h1 class="text-5xl font-bold">${model.brand} ${model.model}</h1><div class="text-3xl text-[#f97316] font-semibold mt-2">New: $${(model.new_price_usd || 0).toLocaleString()}</div></div>`;
-        }
+    const model = equipmentDatabase.find(m => m.id === id);
+    if (!model) return;
+
+    const specs = model.specs || {};
+
+    // Create modal
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4';
+    modal.innerHTML = `
+        <div class="bg-slate-900 rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-slate-700">
+            <!-- Header -->
+            <div class="flex justify-between items-start p-8 border-b border-slate-700">
+                <div>
+                    <div class="flex items-center gap-3 mb-2">
+                        <span class="px-3 py-1 text-xs rounded-full ${getPowerBadgeClass(model)}">${getPowerType(model)}</span>
+                        <span class="text-xs text-orange-500 font-semibold">${model.subcategory}</span>
+                    </div>
+                    <h2 class="text-4xl font-bold">${model.brand} ${model.model}</h2>
+                </div>
+                <button onclick="this.closest('.fixed').remove()" class="text-slate-400 hover:text-white text-3xl leading-none">&times;</button>
+            </div>
+
+            <!-- Key Specs -->
+            <div class="p-8 grid grid-cols-2 md:grid-cols-4 gap-6">
+                ${createSpecItem('Platform Height', specs.platform_height_ft || specs.platform_height_elevated_ft, 'ft')}
+                ${createSpecItem('Horizontal Reach', specs.horizontal_reach_ft, 'ft')}
+                ${createSpecItem('Platform Capacity', specs.platform_capacity_lbs, 'lbs')}
+                ${createSpecItem('Operating Weight', specs.operating_weight_lbs, 'lbs')}
+            </div>
+
+            <!-- Full Specifications -->
+            <div class="px-8 pb-8">
+                <h3 class="text-xl font-semibold mb-4 text-white">Full Specifications</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 text-sm">
+                    ${buildSpecsList(specs)}
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+}
+
+// Helper functions
+function getPowerType(model) {
+    if (model.power_source === 'Hybrid') return 'Hybrid';
+    if (model.power_source === 'Engine') return 'Engine';
+    return 'Electric';
+}
+
+function getPowerBadgeClass(model) {
+    if (model.power_source === 'Hybrid') return 'bg-purple-900 text-purple-400';
+    if (model.power_source === 'Engine') return 'bg-amber-900 text-amber-400';
+    return 'bg-emerald-900 text-emerald-400';
+}
+
+function createSpecItem(label, value, unit) {
+    if (!value) return '';
+    return `
+        <div class="bg-slate-800 rounded-2xl p-4">
+            <div class="text-xs text-slate-400">${label}</div>
+            <div class="text-2xl font-bold text-[#f97316]">${Number(value).toLocaleString()}</div>
+            <div class="text-xs text-slate-500">${unit}</div>
+        </div>
+    `;
+}
+
+function buildSpecsList(specs) {
+    let html = '';
+    for (const [key, value] of Object.entries(specs)) {
+        if (key === 'notes') continue;
+        const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        html += `
+            <div class="flex justify-between py-2 border-b border-slate-800">
+                <span class="text-slate-400">${label}</span>
+                <span class="font-medium text-white">${value}</span>
+            </div>
+        `;
+    }
+    return html;
+}
 
         function renderCompare(container) {
             let html = `
