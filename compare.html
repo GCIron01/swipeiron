@@ -237,52 +237,122 @@
         }
 
         function renderComparisonTable() {
-            const container = document.getElementById('comparison-table-container');
-            let html = `<table class="w-full bg-slate-900 rounded-3xl overflow-hidden text-sm"><thead><tr class="border-b border-slate-700"><th class="p-4 text-left">Specification</th>`;
+    const container = document.getElementById('comparison-table-container');
+    
+    // Define logical groups
+    const groups = {
+        'Performance': [
+            'platform_height', 'work_height', 'horizontal_reach', 'up_and_over',
+            'platform_capacity', 'gradeability', 'drive_speed', 'turning_radius',
+            'lift_time', 'lower_time', 'max_drive_height'
+        ],
+        'Power': [
+            'power_source', 'engine', 'battery', 'voltage', 'fuel_type'
+        ],
+        'Dimensions': [
+            'stowed_length', 'stowed_width', 'stowed_height', 'ground_clearance',
+            'operating_weight', 'weight', 'overall_length', 'overall_width', 'overall_height'
+        ]
+    };
 
-            compareList.forEach(m => {
-                html += `<th class="p-4 text-center"><div class="font-bold">${m.brand}</div><div class="text-xs text-slate-400">${m.model}</div></th>`;
-            });
-            html += `</tr></thead><tbody>`;
-
-            // Get all unique spec keys
-            const allKeys = new Set();
-            compareList.forEach(m => {
-                if (m.specs) Object.keys(m.specs).forEach(k => allKeys.add(k));
-            });
-
-            Array.from(allKeys).sort().forEach(key => {
-                const label = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-                html += `<tr class="border-b border-slate-800"><td class="p-4 font-medium">${label}</td>`;
-
-                compareList.forEach(model => {
-                    let value = model.specs && model.specs[key] ? model.specs[key] : '—';
-                    
-                    // Convert units if needed
-                    if (currentUnit === 'metric' && typeof value === 'number') {
-                        if (key.includes('height') || key.includes('reach') || key.includes('length')) {
-                            value = (value * 0.3048).toFixed(1) + ' m';
-                        } else if (key.includes('weight') || key.includes('capacity')) {
-                            value = Math.round(value * 0.4536) + ' kg';
-                        } else {
-                            value = value;
-                        }
-                    } else if (typeof value === 'number') {
-                        if (key.includes('height') || key.includes('reach') || key.includes('length')) value = value + ' ft';
-                        if (key.includes('weight') || key.includes('capacity')) value = value.toLocaleString() + ' lbs';
-                    }
-
-                    html += `<td class="p-4 text-center text-[#f97316] font-semibold">${value}</td>`;
-                });
-                html += `</tr>`;
-            });
-
-            html += `</tbody></table>`;
-            container.innerHTML = html;
-
-            // Highlight active unit button
-            updateUnitButtons();
+    // Get all unique keys from specs
+    const allKeys = new Set();
+    compareList.forEach(model => {
+        if (model.specs) {
+            Object.keys(model.specs).forEach(key => allKeys.add(key));
         }
+    });
+
+    let html = `
+        <div class="overflow-x-auto bg-slate-900 rounded-3xl p-6">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-slate-700">
+                        <th class="p-4 text-left font-semibold w-64">Specification</th>
+    `;
+
+    compareList.forEach(model => {
+        html += `<th class="p-4 text-center"><div class="font-bold">${model.brand}</div><div class="text-xs text-slate-400">${model.model}</div></th>`;
+    });
+    html += `</tr></thead><tbody>`;
+
+    // Function to render a group
+    function renderGroup(groupName, keywords) {
+        let groupHtml = '';
+        const groupKeys = Array.from(allKeys).filter(key => 
+            keywords.some(kw => key.toLowerCase().includes(kw))
+        );
+
+        if (groupKeys.length === 0) return '';
+
+        groupHtml += `<tr class="bg-slate-800"><td colspan="${compareList.length + 1}" class="p-3 font-semibold text-orange-400">${groupName}</td></tr>`;
+
+        groupKeys.forEach(key => {
+            const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            groupHtml += `<tr class="border-b border-slate-800"><td class="p-4 font-medium text-slate-300">${label}</td>`;
+
+            compareList.forEach(model => {
+                let value = model.specs && model.specs[key] ? model.specs[key] : '—';
+
+                // Unit conversion
+                if (currentUnit === 'metric' && typeof value === 'number') {
+                    if (key.includes('height') || key.includes('reach') || key.includes('length') || key.includes('clearance')) {
+                        value = (value * 0.3048).toFixed(1) + ' m';
+                    } else if (key.includes('weight') || key.includes('capacity')) {
+                        value = Math.round(value * 0.4536) + ' kg';
+                    } else if (key.includes('speed')) {
+                        value = (value * 1.60934).toFixed(1) + ' km/h';
+                    }
+                } else if (typeof value === 'number') {
+                    if (key.includes('height') || key.includes('reach') || key.includes('length') || key.includes('clearance')) value += ' ft';
+                    if (key.includes('weight') || key.includes('capacity')) value = value.toLocaleString() + ' lbs';
+                    if (key.includes('speed')) value += ' mph';
+                    if (key.includes('gradeability')) value += '%';
+                }
+
+                groupHtml += `<td class="p-4 text-center text-[#f97316] font-semibold">${value}</td>`;
+            });
+            groupHtml += `</tr>`;
+        });
+
+        return groupHtml;
+    }
+
+    // Render groups in order
+    html += renderGroup('Performance', groups['Performance']);
+    html += renderGroup('Power', groups['Power']);
+    html += renderGroup('Dimensions', groups['Dimensions']);
+
+    // Render remaining keys under "Other"
+    const usedKeys = new Set();
+    Object.values(groups).flat().forEach(kw => {
+        Array.from(allKeys).forEach(key => {
+            if (key.toLowerCase().includes(kw)) usedKeys.add(key);
+        });
+    });
+
+    const otherKeys = Array.from(allKeys).filter(key => !usedKeys.has(key));
+    
+    if (otherKeys.length > 0) {
+        html += `<tr class="bg-slate-800"><td colspan="${compareList.length + 1}" class="p-3 font-semibold text-orange-400">Other</td></tr>`;
+        
+        otherKeys.sort().forEach(key => {
+            const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            html += `<tr class="border-b border-slate-800"><td class="p-4 font-medium text-slate-300">${label}</td>`;
+            
+            compareList.forEach(model => {
+                let value = model.specs && model.specs[key] ? model.specs[key] : '—';
+                html += `<td class="p-4 text-center text-[#f97316] font-semibold">${value}</td>`;
+            });
+            html += `</tr>`;
+        });
+    }
+
+    html += `</tbody></table></div>`;
+    container.innerHTML = html;
+
+    updateUnitButtons();
+}
 
         function switchUnit(unit) {
             currentUnit = unit;
