@@ -18,26 +18,40 @@
     </style>
 </head>
 <body class="bg-slate-950 text-slate-200">
-    <!-- NAV LINKS - Mobile Friendly -->
-<div class="flex items-center gap-6 text-sm md:text-base font-medium flex-wrap md:flex-nowrap">
-    <a href="#" onclick="showPage('home')" class="hover:text-[#f97316]">Home</a>
-    <a href="#" onclick="showPage('brands')" class="hover:text-[#f97316]">Brands</a>
-    <a href="#" onclick="showPage('construction')" class="hover:text-[#f97316]">Construction</a>
-    <a href="#" onclick="showPage('aerial')" class="hover:text-[#f97316]">Aerial</a>
-    <a href="#" onclick="showPage('models')" class="hover:text-[#f97316]">All Models</a>
-    <a href="compare.html" class="hover:text-[#f97316] font-semibold">Compare</a>
-</div>
-            
-            <div class="flex items-center bg-slate-800 rounded-2xl p-1 border border-slate-700">
-                <div onclick="switchUnit('us')" id="btn-us" class="px-4 py-1.5 rounded-xl text-sm font-semibold cursor-pointer flex items-center gap-x-2 bg-slate-700 text-white">
-                    <i class="fa-solid fa-flag-usa"></i><span>US</span>
-                </div>
-                <div onclick="switchUnit('metric')" id="btn-metric" class="px-4 py-1.5 rounded-xl text-sm font-semibold cursor-pointer flex items-center gap-x-2 text-slate-400 hover:text-white">
-                    <i class="fa-solid fa-globe"></i><span>Metric</span>
-                </div>
+    <!-- NAV -->
+<nav class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        
+        <!-- Logo + Site Name -->
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 bg-[#f97316] rounded flex items-center justify-center text-white font-bold text-2xl">S</div>
+            <div class="text-3xl font-semibold tracking-tight">SwipeIron</div>
+        </div>
+
+        <!-- NAV LINKS -->
+        <div class="flex items-center gap-6 text-sm md:text-base font-medium flex-wrap md:flex-nowrap">
+            <a href="#" onclick="showPage('home')" class="hover:text-[#f97316]">Home</a>
+            <a href="#" onclick="showPage('brands')" class="hover:text-[#f97316]">Brands</a>
+            <a href="#" onclick="showPage('construction')" class="hover:text-[#f97316]">Construction</a>
+            <a href="#" onclick="showPage('aerial')" class="hover:text-[#f97316]">Aerial</a>
+            <a href="#" onclick="showPage('models')" class="hover:text-[#f97316]">All Models</a>
+            <a href="compare.html" class="hover:text-[#f97316] font-semibold">Compare</a>
+        </div>
+
+        <!-- US / Metric Toggle -->
+        <div class="flex items-center bg-slate-800 rounded-2xl p-1 border border-slate-700">
+            <div onclick="switchUnit('us')" id="btn-us" 
+                 class="px-4 py-1.5 rounded-xl text-sm font-semibold cursor-pointer flex items-center gap-x-2 bg-slate-700 text-white">
+                <i class="fa-solid fa-flag-usa"></i><span>US</span>
+            </div>
+            <div onclick="switchUnit('metric')" id="btn-metric" 
+                 class="px-4 py-1.5 rounded-xl text-sm font-semibold cursor-pointer flex items-center gap-x-2 text-slate-400 hover:text-white">
+                <i class="fa-solid fa-globe"></i><span>Metric</span>
             </div>
         </div>
-    </nav>
+
+    </div>
+</nav>
 
     <div id="page-content" class="max-w-7xl mx-auto px-6 py-8"></div>
 
