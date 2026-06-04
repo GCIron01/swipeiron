@@ -126,11 +126,11 @@
             || 0;
         let weight = specs.operating_weight_lbs || specs.weight_lbs || 0;
 
-        // ==================== POWER BADGE (FIXED) ====================
+                // ==================== POWER BADGE (IMPROVED) ====================
         let powerBadge = '';
 
-        // Priority: Use power_source field if it exists
-        if (model.power_source) {
+        // First priority: Use power_source if it exists and is valid
+        if (model.power_source && model.power_source.trim() !== '') {
             if (model.power_source === 'Electric') {
                 powerBadge = `
                     <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold 
@@ -156,22 +156,32 @@
                     </span>`;
             }
         } 
-        // Fallback for older data
-        else if (model.subcategory && model.subcategory.includes('Hybrid')) {
-            powerBadge = `
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold 
-                             bg-purple-600/20 text-purple-400 border border-purple-500/30">
-                    <i class="fa-solid fa-sync fa-spin-pulse"></i>
-                    <span>Hybrid</span>
-                </span>`;
-        } 
-        else if (model.subcategory && model.subcategory.includes('Engine')) {
-            powerBadge = `
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold 
-                             bg-orange-600/20 text-orange-400 border border-orange-500/30">
-                    <i class="fa-solid fa-gas-pump"></i>
-                    <span>Engine</span>
-                </span>`;
+        // Fallback: Check subcategory name if power_source is missing
+        else if (model.subcategory) {
+            if (model.subcategory.includes('Electric')) {
+                powerBadge = `
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold 
+                                 bg-blue-600/20 text-blue-400 border border-blue-500/30">
+                        <i class="fa-solid fa-bolt"></i>
+                        <span>Electric</span>
+                    </span>`;
+            } 
+            else if (model.subcategory.includes('Hybrid')) {
+                powerBadge = `
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold 
+                                 bg-purple-600/20 text-purple-400 border border-purple-500/30">
+                        <i class="fa-solid fa-sync fa-spin-pulse"></i>
+                        <span>Hybrid</span>
+                    </span>`;
+            } 
+            else if (model.subcategory.includes('Engine')) {
+                powerBadge = `
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold 
+                                 bg-orange-600/20 text-orange-400 border border-orange-500/30">
+                        <i class="fa-solid fa-gas-pump"></i>
+                        <span>Engine</span>
+                    </span>`;
+            }
         }
 
         // Clean model name for Towable Boom Lifts
