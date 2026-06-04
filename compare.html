@@ -33,20 +33,17 @@
         <!-- How Compare Works -->
         <div class="bg-slate-800 border border-slate-700 rounded-2xl p-8 mb-10">
             <h1 class="text-4xl font-bold mb-4">Compare Equipment</h1>
-            <div class="text-slate-300 max-w-3xl space-y-2">
-                <p>• Choose a <span class="text-orange-400 font-medium">subcategory</span> first (e.g. Electric Scissor Lift, Telehandler, etc.)</p>
+            <div class="text-slate-300 max-w-3xl space-y-2 text-sm">
+                <p>• Choose a <span class="text-orange-400 font-medium">subcategory</span> first</p>
                 <p>• Select up to <span class="font-semibold">4 machines</span> from the same subcategory</p>
-                <p>• Click <span class="font-semibold">"Compare Now"</span> to see a detailed side-by-side comparison</p>
-                <p>• All specifications come directly from manufacturer data</p>
+                <p>• Click <span class="font-semibold">"Compare Now"</span> to see detailed side-by-side specs</p>
             </div>
         </div>
 
         <!-- Subcategory Selection -->
         <div id="subcategory-section">
             <h2 class="text-2xl font-semibold mb-4">1. Choose a Subcategory</h2>
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="subcategory-grid">
-                <!-- Populated by JavaScript -->
-            </div>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="subcategory-grid"></div>
         </div>
 
         <!-- Machine Selection -->
@@ -58,10 +55,9 @@
                 </button>
             </div>
 
-            <!-- Selected Machines Bar -->
             <div id="selected-bar" class="bg-slate-900 border border-slate-700 rounded-2xl p-4 mb-6 hidden">
                 <div class="flex justify-between items-center mb-3">
-                    <div class="font-medium">Selected Machines (<span id="selected-count">0</span>/4)</div>
+                    <div class="font-medium">Selected (<span id="selected-count">0</span>/4)</div>
                     <div class="flex gap-3">
                         <button onclick="clearSelection()" class="px-4 py-1.5 text-sm border border-slate-600 hover:bg-slate-800 rounded-xl">Clear All</button>
                         <button onclick="performComparison()" class="px-6 py-1.5 text-sm bg-[#f97316] hover:bg-orange-600 rounded-xl font-medium">Compare Now</button>
@@ -70,23 +66,39 @@
                 <div id="selected-machines" class="flex flex-wrap gap-2"></div>
             </div>
 
-            <!-- Machines Grid -->
-            <div class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="machine-grid">
-                <!-- Populated by JavaScript -->
-            </div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="machine-grid"></div>
 
-            <!-- Bottom Compare Button -->
             <div class="mt-8 flex justify-end">
                 <button onclick="performComparison()" class="px-10 py-3 bg-[#f97316] hover:bg-orange-600 text-white font-semibold rounded-2xl flex items-center gap-2">
-                    <i class="fa-solid fa-balance-scale"></i>
-                    <span>Compare Now</span>
+                    <i class="fa-solid fa-balance-scale"></i> <span>Compare Now</span>
                 </button>
             </div>
         </div>
 
         <!-- Comparison Results -->
         <div id="comparison-results" class="hidden mt-10">
-            <!-- Populated dynamically by performComparison() -->
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold">Comparison Results</h2>
+                
+                <!-- Unit Toggle -->
+                <div class="flex items-center bg-slate-800 rounded-2xl p-1 border border-slate-700">
+                    <div onclick="switchUnit('us')" id="btn-us-compare"
+                         class="px-4 py-1.5 rounded-xl text-sm font-semibold cursor-pointer flex items-center gap-x-2 bg-slate-700 text-white">
+                        <i class="fa-solid fa-flag-usa"></i><span>US</span>
+                    </div>
+                    <div onclick="switchUnit('metric')" id="btn-metric-compare"
+                         class="px-4 py-1.5 rounded-xl text-sm font-semibold cursor-pointer flex items-center gap-x-2 text-slate-400 hover:text-white">
+                        <i class="fa-solid fa-globe"></i><span>Metric</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="comparison-table-container"></div>
+
+            <div class="flex justify-between mt-8">
+                <button onclick="goBackToSelection()" class="px-6 py-3 border border-slate-600 hover:bg-slate-800 rounded-2xl">Back to Selection</button>
+                <button onclick="clearComparison()" class="px-6 py-3 border border-red-600 text-red-400 hover:bg-red-950 rounded-2xl">Clear Comparison</button>
+            </div>
         </div>
 
     </div>
@@ -94,13 +106,11 @@
     <!-- Footer -->
     <footer class="border-t border-slate-800 mt-16 py-8 text-xs text-slate-500">
         <div class="max-w-7xl mx-auto px-6">
-            <p><strong>Disclaimer:</strong> SwipeIron is an independent platform and is not affiliated with, endorsed by, or sponsored by any equipment manufacturer. 
-            All brand names, logos, and trademarks are the property of their respective owners. Specifications are for comparison purposes only. 
-            Always verify with the manufacturer before making decisions.</p>
+            <p><strong>Disclaimer:</strong> SwipeIron is an independent platform. Specifications are for comparison purposes only. Always verify with the manufacturer.</p>
         </div>
     </footer>
 
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         const SUPABASE_URL = 'https://kffjahvpapxekbjfhinm.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_8jEfhEqfTx71HPiyUcybYg_A3mGzlm0';
@@ -112,71 +122,51 @@
         let currentSubcategory = null;
 
         async function loadData() {
-            const { data, error } = await supabaseClient
-                .from('equipment_models')
-                .select('*')
-                .order('brand', { ascending: true });
-
-            if (error) {
-                console.error(error);
-                alert('Failed to load equipment data');
-                return;
-            }
+            const { data, error } = await supabaseClient.from('equipment_models').select('*').order('brand');
+            if (error) { alert('Failed to load data'); return; }
             equipmentDatabase = data;
             renderSubcategories();
         }
 
         function renderSubcategories() {
             const container = document.getElementById('subcategory-grid');
-            const subcategories = [...new Set(equipmentDatabase.map(m => m.subcategory).filter(Boolean))];
-            subcategories.sort();
+            const subs = [...new Set(equipmentDatabase.map(m => m.subcategory).filter(Boolean))].sort();
 
             let html = '';
-            subcategories.forEach(sub => {
+            subs.forEach(sub => {
                 const count = equipmentDatabase.filter(m => m.subcategory === sub).length;
                 html += `
-                    <div onclick="selectSubcategory('${sub}')" 
-                         class="bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-orange-500/50 p-6 rounded-3xl cursor-pointer transition-all">
+                    <div onclick="selectSubcategory('${sub}')" class="bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-orange-500 p-6 rounded-3xl cursor-pointer">
                         <div class="font-semibold text-lg">${sub}</div>
-                        <div class="text-sm text-slate-400 mt-1">${count} models available</div>
+                        <div class="text-sm text-slate-400 mt-1">${count} models</div>
                     </div>
                 `;
             });
             container.innerHTML = html;
         }
 
-        function selectSubcategory(subcategory) {
-            currentSubcategory = subcategory;
+        function selectSubcategory(sub) {
+            currentSubcategory = sub;
             document.getElementById('subcategory-section').classList.add('hidden');
             document.getElementById('machine-section').classList.remove('hidden');
-            document.getElementById('subcategory-name').textContent = `— ${subcategory}`;
-
-            renderMachinesInSubcategory();
+            document.getElementById('subcategory-name').textContent = `— ${sub}`;
+            renderMachines();
         }
 
-        function goBackToSubcategories() {
-            document.getElementById('machine-section').classList.add('hidden');
-            document.getElementById('subcategory-section').classList.remove('hidden');
-            compareList = [];
-            document.getElementById('comparison-results').classList.add('hidden');
-        }
-
-        function renderMachinesInSubcategory() {
+        function renderMachines() {
             const container = document.getElementById('machine-grid');
             const models = equipmentDatabase.filter(m => m.subcategory === currentSubcategory);
 
             let html = '';
             models.forEach(model => {
-                const isSelected = compareList.some(m => m.id === model.id);
+                const selected = compareList.some(m => m.id === model.id);
                 html += `
-                    <div onclick="toggleMachine(${model.id})" 
-                         class="bg-slate-900 hover:bg-slate-800 p-5 rounded-3xl cursor-pointer border transition-all ${isSelected ? 'border-[#f97316]' : 'border-slate-800'}">
+                    <div onclick="toggleMachine(${model.id})" class="bg-slate-900 p-5 rounded-3xl cursor-pointer border ${selected ? 'border-[#f97316]' : 'border-slate-800'}">
                         <div class="flex justify-between">
                             <div>
                                 <div class="font-bold">${model.brand} ${model.model}</div>
-                                <div class="text-xs text-slate-400 mt-1">${model.power_source || ''}</div>
                             </div>
-                            ${isSelected ? '<i class="fa-solid fa-check-circle text-[#f97316]"></i>' : ''}
+                            ${selected ? '<i class="fa-solid fa-check-circle text-[#f97316]"></i>' : ''}
                         </div>
                     </div>
                 `;
@@ -187,116 +177,140 @@
 
         function toggleMachine(id) {
             const model = equipmentDatabase.find(m => m.id === id);
-            if (!model) return;
-
             const index = compareList.findIndex(m => m.id === id);
 
             if (index > -1) {
                 compareList.splice(index, 1);
             } else {
-                if (compareList.length >= 4) {
-                    alert('You can only compare up to 4 machines.');
-                    return;
-                }
+                if (compareList.length >= 4) { alert('Maximum 4 machines'); return; }
                 compareList.push(model);
             }
-
-            renderMachinesInSubcategory();
+            renderMachines();
             updateSelectedBar();
         }
 
         function updateSelectedBar() {
             const bar = document.getElementById('selected-bar');
-            const countEl = document.getElementById('selected-count');
-            const listEl = document.getElementById('selected-machines');
+            const count = document.getElementById('selected-count');
+            const list = document.getElementById('selected-machines');
 
             if (compareList.length === 0) {
                 bar.classList.add('hidden');
                 return;
             }
-
             bar.classList.remove('hidden');
-            countEl.textContent = compareList.length;
+            count.textContent = compareList.length;
 
             let html = '';
-            compareList.forEach((model, index) => {
-                html += `
-                    <div class="flex items-center bg-slate-800 px-3 py-1 rounded-xl text-sm">
-                        <span>${model.brand} ${model.model}</span>
-                        <button onclick="event.stopImmediatePropagation(); removeFromSelection(${index});" class="ml-2 text-red-400 hover:text-red-500">
-                            <i class="fa-solid fa-times"></i>
-                        </button>
-                    </div>
-                `;
+            compareList.forEach((m, i) => {
+                html += `<div class="bg-slate-800 px-3 py-1 rounded-xl text-sm flex items-center gap-2">${m.brand} ${m.model}
+                    <button onclick="event.stopImmediatePropagation(); removeMachine(${i})" class="text-red-400"><i class="fa-solid fa-times"></i></button></div>`;
             });
-            listEl.innerHTML = html;
+            list.innerHTML = html;
         }
 
-        function removeFromSelection(index) {
+        function removeMachine(index) {
             compareList.splice(index, 1);
-            renderMachinesInSubcategory();
+            renderMachines();
             updateSelectedBar();
         }
 
         function clearSelection() {
             compareList = [];
-            renderMachinesInSubcategory();
+            renderMachines();
             updateSelectedBar();
         }
 
-        function performComparison() {
-            if (compareList.length < 2) {
-                alert('Please select at least 2 machines to compare.');
-                return;
-            }
-
-            const resultsContainer = document.getElementById('comparison-results');
+        function goBackToSubcategories() {
             document.getElementById('machine-section').classList.add('hidden');
-            resultsContainer.classList.remove('hidden');
+            document.getElementById('subcategory-section').classList.remove('hidden');
+            compareList = [];
+        }
 
-            let html = `
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-3xl font-bold">Comparison Results</h2>
-                    <div class="flex gap-3">
-                        <button onclick="goBackToSelection()" class="px-5 py-2 border border-slate-600 rounded-2xl text-sm">Back to Selection</button>
-                        <button onclick="clearComparison()" class="px-5 py-2 border border-red-600 text-red-400 hover:bg-red-950 rounded-2xl text-sm">Clear Comparison</button>
-                    </div>
-                </div>
-                <div class="overflow-x-auto bg-slate-900 rounded-3xl p-6">
-                    <table class="w-full text-sm">
-                        <thead>
-                            <tr class="border-b border-slate-700">
-                                <th class="text-left p-4 font-semibold w-56">Specification</th>
-            `;
+        function performComparison() {
+            if (compareList.length < 2) { alert('Select at least 2 machines'); return; }
 
-            compareList.forEach(model => {
-                html += `<th class="p-4 text-center"><div class="font-bold">${model.brand}</div><div class="text-xs text-slate-400">${model.model}</div></th>`;
+            document.getElementById('machine-section').classList.add('hidden');
+            document.getElementById('comparison-results').classList.remove('hidden');
+
+            renderComparisonTable();
+        }
+
+        function renderComparisonTable() {
+            const container = document.getElementById('comparison-table-container');
+            let html = `<table class="w-full bg-slate-900 rounded-3xl overflow-hidden text-sm"><thead><tr class="border-b border-slate-700"><th class="p-4 text-left">Specification</th>`;
+
+            compareList.forEach(m => {
+                html += `<th class="p-4 text-center"><div class="font-bold">${m.brand}</div><div class="text-xs text-slate-400">${m.model}</div></th>`;
             });
-
             html += `</tr></thead><tbody>`;
 
-            // Get all unique keys from specs
+            // Get all unique spec keys
             const allKeys = new Set();
-            compareList.forEach(model => {
-                if (model.specs) {
-                    Object.keys(model.specs).forEach(key => allKeys.add(key));
-                }
+            compareList.forEach(m => {
+                if (m.specs) Object.keys(m.specs).forEach(k => allKeys.add(k));
             });
 
             Array.from(allKeys).sort().forEach(key => {
-                const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                html += `<tr class="border-b border-slate-800"><td class="p-4 font-medium text-slate-300">${label}</td>`;
+                const label = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                html += `<tr class="border-b border-slate-800"><td class="p-4 font-medium">${label}</td>`;
 
                 compareList.forEach(model => {
-                    const value = model.specs && model.specs[key] ? model.specs[key] : '—';
+                    let value = model.specs && model.specs[key] ? model.specs[key] : '—';
+                    
+                    // Convert units if needed
+                    if (currentUnit === 'metric' && typeof value === 'number') {
+                        if (key.includes('height') || key.includes('reach') || key.includes('length')) {
+                            value = (value * 0.3048).toFixed(1) + ' m';
+                        } else if (key.includes('weight') || key.includes('capacity')) {
+                            value = Math.round(value * 0.4536) + ' kg';
+                        } else {
+                            value = value;
+                        }
+                    } else if (typeof value === 'number') {
+                        if (key.includes('height') || key.includes('reach') || key.includes('length')) value = value + ' ft';
+                        if (key.includes('weight') || key.includes('capacity')) value = value.toLocaleString() + ' lbs';
+                    }
+
                     html += `<td class="p-4 text-center text-[#f97316] font-semibold">${value}</td>`;
                 });
-
                 html += `</tr>`;
             });
 
-            html += `</tbody></table></div>`;
-            resultsContainer.innerHTML = html;
+            html += `</tbody></table>`;
+            container.innerHTML = html;
+
+            // Highlight active unit button
+            updateUnitButtons();
+        }
+
+        function switchUnit(unit) {
+            currentUnit = unit;
+            updateUnitButtons();
+
+            // Re-render comparison if visible
+            if (!document.getElementById('comparison-results').classList.contains('hidden')) {
+                renderComparisonTable();
+            }
+        }
+
+        function updateUnitButtons() {
+            const usBtn = document.getElementById('btn-us-compare');
+            const metricBtn = document.getElementById('btn-metric-compare');
+
+            if (!usBtn || !metricBtn) return;
+
+            if (currentUnit === 'us') {
+                usBtn.classList.add('bg-slate-700', 'text-white');
+                usBtn.classList.remove('text-slate-400');
+                metricBtn.classList.remove('bg-slate-700', 'text-white');
+                metricBtn.classList.add('text-slate-400');
+            } else {
+                metricBtn.classList.add('bg-slate-700', 'text-white');
+                metricBtn.classList.remove('text-slate-400');
+                usBtn.classList.remove('bg-slate-700', 'text-white');
+                usBtn.classList.add('text-slate-400');
+            }
         }
 
         function goBackToSelection() {
@@ -308,11 +322,10 @@
             compareList = [];
             document.getElementById('comparison-results').classList.add('hidden');
             document.getElementById('machine-section').classList.remove('hidden');
-            renderMachinesInSubcategory();
+            renderMachines();
             updateSelectedBar();
         }
 
-        // Initialize
         async function init() {
             await loadData();
         }
