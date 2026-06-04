@@ -1,1 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compare Equipment | SwipeIron</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
+        body { font-family: 'Inter', system_ui, sans-serif; }
+        .font-display { font-family: 'Space Grotesk', 'Inter', sans-serif; font-weight: 600; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-200">
 
+    <!-- NAV -->
+    <nav class="bg-slate-900 border-b border-slate-800">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 bg-[#f97316] rounded flex items-center justify-center text-white font-bold text-2xl">S</div>
+                <a href="index.html" class="text-3xl font-semibold tracking-tight">SwipeIron</a>
+            </div>
+            <a href="index.html" class="text-sm text-slate-400 hover:text-white flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i> Back to Home
+            </a>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-6 py-8" id="main-content">
+
+        <!-- How Compare Works -->
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-8 mb-10">
+            <h1 class="text-4xl font-bold mb-4">Compare Equipment</h1>
+            <div class="text-slate-300 max-w-3xl space-y-2">
+                <p>• Choose a <span class="text-orange-400 font-medium">subcategory</span> first (e.g. Electric Scissor Lift, Telehandler, etc.)</p>
+                <p>• Select up to <span class="font-semibold">4 machines</span> from the same subcategory</p>
+                <p>• Click <span class="font-semibold">"Compare Now"</span> to see a detailed side-by-side comparison</p>
+                <p>• All specifications come directly from manufacturer data</p>
+            </div>
+        </div>
+
+        <!-- Subcategory Selection -->
+        <div id="subcategory-section">
+            <h2 class="text-2xl font-semibold mb-4">1. Choose a Subcategory</h2>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="subcategory-grid">
+                <!-- Populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Machine Selection -->
+        <div id="machine-section" class="hidden mt-10">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-2xl font-semibold">2. Select Machines <span id="subcategory-name" class="text-orange-400"></span></h2>
+                <button onclick="goBackToSubcategories()" class="text-sm text-slate-400 hover:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-left"></i> Change Subcategory
+                </button>
+            </div>
+
+            <!-- Selected Machines Bar -->
+            <div id="selected-bar" class="bg-slate-900 border border-slate-700 rounded-2xl p-4 mb-6 hidden">
+                <div class="flex justify-between items-center mb-3">
+                    <div class="font-medium">Selected Machines (<span id="selected-count">0</span>/4)</div>
+                    <div class="flex gap-3">
+                        <button onclick="clearSelection()" class="px-4 py-1.5 text-sm border border-slate-600 hover:bg-slate-800 rounded-xl">Clear All</button>
+                        <button onclick="performComparison()" class="px-6 py-1.5 text-sm bg-[#f97316] hover:bg-orange-600 rounded-xl font-medium">Compare Now</button>
+                    </div>
+                </div>
+                <div id="selected-machines" class="flex flex-wrap gap-2"></div>
+            </div>
+
+            <!-- Machines Grid -->
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="machine-grid">
+                <!-- Populated by JavaScript -->
+            </div>
+
+            <!-- Bottom Compare Button -->
+            <div class="mt-8 flex justify-end">
+                <button onclick="performComparison()" class="px-10 py-3 bg-[#f97316] hover:bg-orange-600 text-white font-semibold rounded-2xl flex items-center gap-2">
+                    <i class="fa-solid fa-balance-scale"></i>
+                    <span>Compare Now</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Comparison Results -->
+        <div id="comparison-results" class="hidden mt-10">
+            <!-- Populated dynamically by performComparison() -->
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800 mt-16 py-8 text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto px-6">
+            <p><strong>Disclaimer:</strong> SwipeIron is an independent platform and is not affiliated with, endorsed by, or sponsored by any equipment manufacturer. 
+            All brand names, logos, and trademarks are the property of their respective owners. Specifications are for comparison purposes only. 
+            Always verify with the manufacturer before making decisions.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        const SUPABASE_URL = 'https://kffjahvpapxekbjfhinm.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_8jEfhEqfTx71HPiyUcybYg_A3mGzlm0';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let equipmentDatabase = [];
+        let currentUnit = 'us';
+        let compareList = [];
+        let currentSubcategory = null;
+
+        async function loadData() {
+            const { data, error } = await supabaseClient
+                .from('equipment_models')
+                .select('*')
+                .order('brand', { ascending: true });
+
+            if (error) {
+                console.error(error);
+                alert('Failed to load equipment data');
+                return;
+            }
+            equipmentDatabase = data;
+            renderSubcategories();
+        }
+
+        function renderSubcategories() {
+            const container = document.getElementById('subcategory-grid');
+            const subcategories = [...new Set(equipmentDatabase.map(m => m.subcategory).filter(Boolean))];
+            subcategories.sort();
+
+            let html = '';
+            subcategories.forEach(sub => {
+                const count = equipmentDatabase.filter(m => m.subcategory === sub).length;
+                html += `
+                    <div onclick="selectSubcategory('${sub}')" 
+                         class="bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-orange-500/50 p-6 rounded-3xl cursor-pointer transition-all">
+                        <div class="font-semibold text-lg">${sub}</div>
+                        <div class="text-sm text-slate-400 mt-1">${count} models available</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function selectSubcategory(subcategory) {
+            currentSubcategory = subcategory;
+            document.getElementById('subcategory-section').classList.add('hidden');
+            document.getElementById('machine-section').classList.remove('hidden');
+            document.getElementById('subcategory-name').textContent = `— ${subcategory}`;
+
+            renderMachinesInSubcategory();
+        }
+
+        function goBackToSubcategories() {
+            document.getElementById('machine-section').classList.add('hidden');
+            document.getElementById('subcategory-section').classList.remove('hidden');
+            compareList = [];
+            document.getElementById('comparison-results').classList.add('hidden');
+        }
+
+        function renderMachinesInSubcategory() {
+            const container = document.getElementById('machine-grid');
+            const models = equipmentDatabase.filter(m => m.subcategory === currentSubcategory);
+
+            let html = '';
+            models.forEach(model => {
+                const isSelected = compareList.some(m => m.id === model.id);
+                html += `
+                    <div onclick="toggleMachine(${model.id})" 
+                         class="bg-slate-900 hover:bg-slate-800 p-5 rounded-3xl cursor-pointer border transition-all ${isSelected ? 'border-[#f97316]' : 'border-slate-800'}">
+                        <div class="flex justify-between">
+                            <div>
+                                <div class="font-bold">${model.brand} ${model.model}</div>
+                                <div class="text-xs text-slate-400 mt-1">${model.power_source || ''}</div>
+                            </div>
+                            ${isSelected ? '<i class="fa-solid fa-check-circle text-[#f97316]"></i>' : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+            updateSelectedBar();
+        }
+
+        function toggleMachine(id) {
+            const model = equipmentDatabase.find(m => m.id === id);
+            if (!model) return;
+
+            const index = compareList.findIndex(m => m.id === id);
+
+            if (index > -1) {
+                compareList.splice(index, 1);
+            } else {
+                if (compareList.length >= 4) {
+                    alert('You can only compare up to 4 machines.');
+                    return;
+                }
+                compareList.push(model);
+            }
+
+            renderMachinesInSubcategory();
+            updateSelectedBar();
+        }
+
+        function updateSelectedBar() {
+            const bar = document.getElementById('selected-bar');
+            const countEl = document.getElementById('selected-count');
+            const listEl = document.getElementById('selected-machines');
+
+            if (compareList.length === 0) {
+                bar.classList.add('hidden');
+                return;
+            }
+
+            bar.classList.remove('hidden');
+            countEl.textContent = compareList.length;
+
+            let html = '';
+            compareList.forEach((model, index) => {
+                html += `
+                    <div class="flex items-center bg-slate-800 px-3 py-1 rounded-xl text-sm">
+                        <span>${model.brand} ${model.model}</span>
+                        <button onclick="event.stopImmediatePropagation(); removeFromSelection(${index});" class="ml-2 text-red-400 hover:text-red-500">
+                            <i class="fa-solid fa-times"></i>
+                        </button>
+                    </div>
+                `;
+            });
+            listEl.innerHTML = html;
+        }
+
+        function removeFromSelection(index) {
+            compareList.splice(index, 1);
+            renderMachinesInSubcategory();
+            updateSelectedBar();
+        }
+
+        function clearSelection() {
+            compareList = [];
+            renderMachinesInSubcategory();
+            updateSelectedBar();
+        }
+
+        function performComparison() {
+            if (compareList.length < 2) {
+                alert('Please select at least 2 machines to compare.');
+                return;
+            }
+
+            const resultsContainer = document.getElementById('comparison-results');
+            document.getElementById('machine-section').classList.add('hidden');
+            resultsContainer.classList.remove('hidden');
+
+            let html = `
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-3xl font-bold">Comparison Results</h2>
+                    <div class="flex gap-3">
+                        <button onclick="goBackToSelection()" class="px-5 py-2 border border-slate-600 rounded-2xl text-sm">Back to Selection</button>
+                        <button onclick="clearComparison()" class="px-5 py-2 border border-red-600 text-red-400 hover:bg-red-950 rounded-2xl text-sm">Clear Comparison</button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto bg-slate-900 rounded-3xl p-6">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-slate-700">
+                                <th class="text-left p-4 font-semibold w-56">Specification</th>
+            `;
+
+            compareList.forEach(model => {
+                html += `<th class="p-4 text-center"><div class="font-bold">${model.brand}</div><div class="text-xs text-slate-400">${model.model}</div></th>`;
+            });
+
+            html += `</tr></thead><tbody>`;
+
+            // Get all unique keys from specs
+            const allKeys = new Set();
+            compareList.forEach(model => {
+                if (model.specs) {
+                    Object.keys(model.specs).forEach(key => allKeys.add(key));
+                }
+            });
+
+            Array.from(allKeys).sort().forEach(key => {
+                const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                html += `<tr class="border-b border-slate-800"><td class="p-4 font-medium text-slate-300">${label}</td>`;
+
+                compareList.forEach(model => {
+                    const value = model.specs && model.specs[key] ? model.specs[key] : '—';
+                    html += `<td class="p-4 text-center text-[#f97316] font-semibold">${value}</td>`;
+                });
+
+                html += `</tr>`;
+            });
+
+            html += `</tbody></table></div>`;
+            resultsContainer.innerHTML = html;
+        }
+
+        function goBackToSelection() {
+            document.getElementById('comparison-results').classList.add('hidden');
+            document.getElementById('machine-section').classList.remove('hidden');
+        }
+
+        function clearComparison() {
+            compareList = [];
+            document.getElementById('comparison-results').classList.add('hidden');
+            document.getElementById('machine-section').classList.remove('hidden');
+            renderMachinesInSubcategory();
+            updateSelectedBar();
+        }
+
+        // Initialize
+        async function init() {
+            await loadData();
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
