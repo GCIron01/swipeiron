@@ -126,11 +126,11 @@
             || 0;
         let weight = specs.operating_weight_lbs || specs.weight_lbs || 0;
 
-                // ==================== POWER BADGE (IMPROVED) ====================
+        // ==================== POWER BADGE (FIXED) ====================
         let powerBadge = '';
 
-        // First priority: Use power_source if it exists and is valid
-        if (model.power_source && model.power_source.trim() !== '') {
+        // Priority: Use power_source field if it exists
+        if (model.power_source) {
             if (model.power_source === 'Electric') {
                 powerBadge = `
                     <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold 
@@ -156,33 +156,80 @@
                     </span>`;
             }
         } 
-        // Fallback: Check subcategory name if power_source is missing
-        else if (model.subcategory) {
-            if (model.subcategory.includes('Electric')) {
-                powerBadge = `
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold 
-                                 bg-blue-600/20 text-blue-400 border border-blue-500/30">
-                        <i class="fa-solid fa-bolt"></i>
-                        <span>Electric</span>
-                    </span>`;
-            } 
-            else if (model.subcategory.includes('Hybrid')) {
-                powerBadge = `
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold 
-                                 bg-purple-600/20 text-purple-400 border border-purple-500/30">
-                        <i class="fa-solid fa-sync fa-spin-pulse"></i>
-                        <span>Hybrid</span>
-                    </span>`;
-            } 
-            else if (model.subcategory.includes('Engine')) {
-                powerBadge = `
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold 
-                                 bg-orange-600/20 text-orange-400 border border-orange-500/30">
-                        <i class="fa-solid fa-gas-pump"></i>
-                        <span>Engine</span>
-                    </span>`;
-            }
+        // Fallback for older data
+        else if (model.subcategory && model.subcategory.includes('Hybrid')) {
+            powerBadge = `
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold 
+                             bg-purple-600/20 text-purple-400 border border-purple-500/30">
+                    <i class="fa-solid fa-sync fa-spin-pulse"></i>
+                    <span>Hybrid</span>
+                </span>`;
+        } 
+        else if (model.subcategory && model.subcategory.includes('Engine')) {
+            powerBadge = `
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold 
+                             bg-orange-600/20 text-orange-400 border border-orange-500/30">
+                    <i class="fa-solid fa-gas-pump"></i>
+                    <span>Engine</span>
+                </span>`;
         }
+
+        // Clean model name for Towable Boom Lifts
+        let displayModel = `${model.brand} ${model.model}`;
+        if (model.subcategory === 'Towable Boom Lift') {
+            displayModel = `${model.brand} ${model.model.replace(/\s*\(Electric\)|\s*\(Hybrid\)|\s*\(Engine\)/gi, '')}`;
+        }
+
+        const hasRestricted = specs.platform_capacity_restricted_lbs && specs.platform_capacity_unrestricted_lbs;
+        const showAsterisk = hasRestricted && (specs.platform_capacity_restricted_lbs !== specs.platform_capacity_unrestricted_lbs);
+
+        if (currentUnit === 'metric') {
+            height = height > 0 ? (height * 0.3048).toFixed(1) : 0;
+            capacity = capacity > 0 ? Math.round(capacity * 0.4536) : 0;
+            weight = weight > 0 ? Math.round(weight * 0.4536) : 0;
+        }
+
+        const hUnit = currentUnit === 'us' ? 'ft' : 'm';
+        const cUnit = currentUnit === 'us' ? 'lbs' : 'kg';
+        const wUnit = currentUnit === 'us' ? 'lbs' : 'kg';
+
+        const displayHeight = height > 0 ? height : '—';
+        let displayCapacity = capacity > 0 ? capacity.toLocaleString() : '—';
+        if (showAsterisk && currentUnit === 'us') displayCapacity = displayCapacity + ' *';
+        const displayWeight = weight > 0 ? weight.toLocaleString() : '—';
+
+        return `
+            <div onclick="showModelDetail(${model.id})" class="equipment-card bg-slate-900 hover:bg-slate-800 p-6 rounded-3xl cursor-pointer border border-slate-800">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <div class="text-xs text-orange-500 font-semibold">${model.subcategory || 'Aerial'}</div>
+                        <div class="font-bold text-xl">${displayModel}</div>
+                    </div>
+                    ${powerBadge}
+                </div>
+                <div class="grid grid-cols-3 gap-4 text-center">
+                    <div>
+                        <div class="text-xs text-slate-500">Platform Height</div>
+                        <div class="text-2xl font-bold text-[#f97316]">${displayHeight}</div>
+                        <div class="text-xs text-slate-500">${hUnit}</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-500">Capacity</div>
+                        <div class="text-2xl font-bold text-[#f97316]">${displayCapacity}</div>
+                        <div class="text-xs text-slate-500">${cUnit}</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-500">Weight</div>
+                        <div class="text-2xl font-bold text-[#f97316]">${displayWeight}</div>
+                        <div class="text-xs text-slate-500">${wUnit}</div>
+                    </div>
+                </div>
+                <div class="mt-5 pt-4 border-t border-slate-800 flex justify-between text-xs text-slate-400">
+                    <div>Click for full specs →</div>
+                </div>
+            </div>
+        `;
+    }
     
     else if (isMaterialHandling) {
     let liftHeight = specs.max_lift_height_ft || 0;
