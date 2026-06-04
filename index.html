@@ -452,7 +452,12 @@
             <div class="flex justify-between items-start p-8 border-b border-slate-700">
                 <div>
                     <div class="flex items-center gap-3 mb-2">
-                        <span class="px-3 py-1 text-xs rounded-full ${getPowerBadgeClass(model)}">${getPowerType(model)}</span>
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${getPowerBadgeClass(model)}">
+    ${getPowerType(model) === 'Electric' ? '<i class="fa-solid fa-bolt"></i>' : ''}
+    ${getPowerType(model) === 'Hybrid' ? '<i class="fa-solid fa-sync fa-spin-pulse"></i>' : ''}
+    ${getPowerType(model) === 'Engine' ? '<i class="fa-solid fa-gas-pump"></i>' : ''}
+    <span>${getPowerType(model)}</span>
+</span>
                         <span class="text-xs text-orange-500 font-semibold">${model.subcategory}</span>
                     </div>
                     <h2 class="text-4xl font-bold">${model.brand} ${model.model}</h2>
@@ -483,14 +488,28 @@
 
 // Helper functions
 function getPowerType(model) {
-    if (model.power_source === 'Hybrid') return 'Hybrid';
-    if (model.power_source === 'Engine') return 'Engine';
-    return 'Electric';
+    if (!model.power_source) {
+        // Fallback based on subcategory
+        if (model.subcategory && model.subcategory.includes('Electric')) return 'Electric';
+        if (model.subcategory && model.subcategory.includes('Hybrid')) return 'Hybrid';
+        if (model.subcategory && model.subcategory.includes('Engine')) return 'Engine';
+        return 'Electric';
+    }
+    return model.power_source;
 }
 
 function getPowerBadgeClass(model) {
-    if (model.power_source === 'Hybrid') return 'bg-purple-900 text-purple-400';
-    if (model.power_source === 'Engine') return 'bg-amber-900 text-amber-400';
+    const power = model.power_source || '';
+
+    if (power === 'Electric' || (model.subcategory && model.subcategory.includes('Electric'))) {
+        return 'bg-blue-600/20 text-blue-400 border border-blue-500/30';
+    }
+    if (power === 'Hybrid' || (model.subcategory && model.subcategory.includes('Hybrid'))) {
+        return 'bg-purple-600/20 text-purple-400 border border-purple-500/30';
+    }
+    if (power === 'Engine' || (model.subcategory && model.subcategory.includes('Engine'))) {
+        return 'bg-orange-600/20 text-orange-400 border border-orange-500/30';
+    }
     return 'bg-emerald-900 text-emerald-400';
 }
 
