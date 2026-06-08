@@ -282,7 +282,14 @@
 
     const specs = model.specs || {};
     
-    // Create modal
+    // Determine best HP value to show
+    const hpValue = specs.net_hp || specs.gross_hp || specs.hp || null;
+    const hpLabel = specs.net_hp ? 'Net Power' : (specs.gross_hp ? 'Gross Power' : 'Horsepower');
+
+    // Determine Dig Depth
+    const digDepthFt = specs.max_dig_depth_ft || specs.dig_depth_ft;
+    const digDepthIn = specs.max_dig_depth_in;
+
     const modal = document.createElement('div');
     modal.className = 'fixed inset-0 bg-black/70 flex items-center justify-center z-[100] p-4';
     modal.innerHTML = `
@@ -308,12 +315,11 @@
             <!-- Content -->
             <div class="p-8 overflow-y-auto flex-1">
                 
-                <!-- Quick Stats -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <!-- Top 3 Key Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                     ${createQuickStat('Operating Weight', specs.operating_weight_lbs, 'lbs')}
-                    ${createQuickStat('Net Power', specs.net_hp || specs.gross_hp, 'hp')}
-                    ${createQuickStat('Gross Power', specs.gross_hp, 'hp')}
-                    ${createQuickStat('Operating Capacity', specs.rated_operating_capacity_lbs, 'lbs')}
+                    ${createQuickStat('Max Dig Depth', digDepthFt || digDepthIn, digDepthFt ? 'ft' : 'in')}
+                    ${createQuickStat(hpLabel, hpValue, 'hp')}
                 </div>
 
                 <!-- Full Specifications -->
@@ -339,7 +345,7 @@
     document.body.appendChild(modal);
 }
 
-// Helper: Quick stat cards
+// Helper functions (keep these the same)
 function createQuickStat(label, value, unit) {
     if (!value) return '';
     return `
@@ -351,17 +357,15 @@ function createQuickStat(label, value, unit) {
     `;
 }
 
-// Helper: Render all specs from JSONB
 function renderSpecRows(specs) {
     let html = '';
     
     const priorityKeys = [
         'net_hp', 'gross_hp', 'operating_weight_lbs', 'rated_operating_capacity_lbs', 
-        'tipping_load_lbs', 'max_dig_depth_ft', 'bucket_breakout_force_lbs',
+        'tipping_load_lbs', 'max_dig_depth_ft', 'max_dig_depth_in', 'bucket_breakout_force_lbs',
         'engine_model', 'fuel_type', 'undercarriage_type'
     ];
 
-    // Show priority fields first
     priorityKeys.forEach(key => {
         if (specs[key]) {
             const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
@@ -374,7 +378,6 @@ function renderSpecRows(specs) {
         }
     });
 
-    // Show remaining fields
     Object.keys(specs).forEach(key => {
         if (!priorityKeys.includes(key) && specs[key]) {
             const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
