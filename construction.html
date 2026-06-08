@@ -52,16 +52,15 @@
         </div>
     </div>
 
-    <!-- STATS + LOADING -->
-    <div class="max-w-7xl mx-auto px-6 mb-4 flex items-center justify-between">
+    <!-- STATS -->
+    <div class="max-w-7xl mx-auto px-6 mb-4">
         <div id="results-count" class="text-sm text-slate-400"></div>
-        <div id="loading" class="text-sm text-orange-400 hidden">Loading equipment...</div>
     </div>
 
     <!-- EQUIPMENT GRID -->
     <div class="max-w-7xl mx-auto px-6 pb-12">
         <div id="equipment-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            <!-- Cards populated by JS -->
+            <!-- Populated by JavaScript -->
         </div>
     </div>
 
@@ -74,10 +73,12 @@
     </div>
 
     <script>
+        // ==================== SUPABASE ====================
         const SUPABASE_URL = 'https://kffjahvpapxekbjfhinm.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtmZmphaHZwYXB4ZWtiamZoaW5tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NjUxMDMsImV4cCI6MjA4OTQ0MTEwM30.EZkCFq0y6Mr9Rt5rn51khbif4aK_cd6ACE-6qw9MZgU';
         
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // FIX: Use a different variable name to avoid conflict with the global 'supabase'
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
         let equipmentDatabase = [];
         let currentUnit = 'us';
@@ -85,13 +86,12 @@
         async function loadConstructionEquipment() {
             const grid = document.getElementById('equipment-grid');
             const countEl = document.getElementById('results-count');
-            const loadingEl = document.getElementById('loading');
 
-            loadingEl.classList.remove('hidden');
             grid.innerHTML = '';
+            countEl.innerHTML = 'Loading equipment...';
 
             try {
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('equipment_models')
                     .select('*')
                     .eq('category', 'Construction')
@@ -100,13 +100,12 @@
                 if (error) throw error;
 
                 equipmentDatabase = data || [];
-                loadingEl.classList.add('hidden');
 
                 if (equipmentDatabase.length === 0) {
                     grid.innerHTML = `
                         <div class="col-span-full bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center">
-                            <p class="text-lg text-slate-300">No construction equipment found in the database.</p>
-                            <p class="text-sm text-slate-500 mt-2">Check Supabase → equipment_models table for category = 'Construction'</p>
+                            <p class="text-lg text-slate-300">No construction equipment found.</p>
+                            <p class="text-sm text-slate-500 mt-2">Please check that the 'category' column contains the value 'Construction'</p>
                         </div>`;
                     countEl.innerHTML = '';
                 } else {
@@ -117,13 +116,13 @@
                 console.log('%c[Construction] Loaded ' + equipmentDatabase.length + ' machines', 'color:#f97316');
 
             } catch (err) {
-                loadingEl.classList.add('hidden');
                 console.error('Supabase Error:', err);
                 grid.innerHTML = `
                     <div class="col-span-full bg-red-900/20 border border-red-800 rounded-3xl p-8 text-center">
-                        <p class="text-red-400 font-medium">Failed to load equipment from Supabase</p>
+                        <p class="text-red-400 font-medium">Failed to load from Supabase</p>
                         <p class="text-sm text-red-400/70 mt-1">${err.message}</p>
                     </div>`;
+                countEl.innerHTML = '';
             }
         }
 
@@ -218,8 +217,7 @@
         function showModelDetail(id) {
             const model = equipmentDatabase.find(m => m.id === id);
             if (!model) return;
-            alert(`Model detail page coming soon for ${model.brand} ${model.model}`);
-            // We can expand this later to show full specs
+            alert(`Full model detail coming soon for ${model.brand} ${model.model}`);
         }
 
         async function init() {
