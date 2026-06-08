@@ -281,14 +281,46 @@
     if (!model) return;
 
     const specs = model.specs || {};
-    
-    // Determine best HP value to show
+    const subcategory = model.subcategory || '';
+
+    // Determine best HP value
     const hpValue = specs.net_hp || specs.gross_hp || specs.hp || null;
     const hpLabel = specs.net_hp ? 'Net Power' : (specs.gross_hp ? 'Gross Power' : 'Horsepower');
 
-    // Determine Dig Depth
-    const digDepthFt = specs.max_dig_depth_ft || specs.dig_depth_ft;
-    const digDepthIn = specs.max_dig_depth_in;
+    // Build the three quick stats based on subcategory
+    let quickStatsHTML = '';
+
+    const isSkidSteerOrCTL = subcategory.includes('Skid Steer') || subcategory.includes('Compact Track');
+
+    if (isSkidSteerOrCTL) {
+        // Skid Steers & Compact Track Loaders
+        quickStatsHTML = `
+            ${createQuickStat('Operating Weight', specs.operating_weight_lbs, 'lbs')}
+            ${createQuickStat('Operating Capacity', specs.rated_operating_capacity_lbs, 'lbs')}
+            ${createQuickStat(hpLabel, hpValue, 'hp')}
+        `;
+    } 
+    else if (subcategory.includes('Mini Excavator')) {
+        // Mini Excavators
+        const digDepthFt = specs.max_dig_depth_ft || specs.dig_depth_ft;
+        const digDepthIn = specs.max_dig_depth_in;
+        const digValue = digDepthFt || digDepthIn;
+        const digUnit = digDepthFt ? 'ft' : 'in';
+
+        quickStatsHTML = `
+            ${createQuickStat('Operating Weight', specs.operating_weight_lbs, 'lbs')}
+            ${createQuickStat('Max Dig Depth', digValue, digUnit)}
+            ${createQuickStat(hpLabel, hpValue, 'hp')}
+        `;
+    } 
+    else {
+        // Default fallback
+        quickStatsHTML = `
+            ${createQuickStat('Operating Weight', specs.operating_weight_lbs, 'lbs')}
+            ${createQuickStat('Operating Capacity', specs.rated_operating_capacity_lbs, 'lbs')}
+            ${createQuickStat(hpLabel, hpValue, 'hp')}
+        `;
+    }
 
     const modal = document.createElement('div');
     modal.className = 'fixed inset-0 bg-black/70 flex items-center justify-center z-[100] p-4';
@@ -300,7 +332,7 @@
                 <div>
                     <div class="flex items-center gap-3">
                         <span class="px-4 py-1.5 rounded-full text-sm font-semibold bg-slate-700 text-slate-200">
-                            ${model.subcategory || model.category}
+                            ${subcategory || model.category}
                         </span>
                         <span class="px-4 py-1.5 rounded-full text-sm font-semibold bg-emerald-900 text-emerald-400 flex items-center gap-2">
                             <i class="fa-solid fa-gas-pump"></i> ${model.power_source || 'Diesel'}
@@ -315,11 +347,9 @@
             <!-- Content -->
             <div class="p-8 overflow-y-auto flex-1">
                 
-                <!-- Top 3 Key Stats -->
+                <!-- Dynamic Top 3 Stats -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                    ${createQuickStat('Operating Weight', specs.operating_weight_lbs, 'lbs')}
-                    ${createQuickStat('Max Dig Depth', digDepthFt || digDepthIn, digDepthFt ? 'ft' : 'in')}
-                    ${createQuickStat(hpLabel, hpValue, 'hp')}
+                    ${quickStatsHTML}
                 </div>
 
                 <!-- Full Specifications -->
@@ -345,7 +375,7 @@
     document.body.appendChild(modal);
 }
 
-// Helper functions (keep these the same)
+// Keep these two helper functions unchanged
 function createQuickStat(label, value, unit) {
     if (!value) return '';
     return `
