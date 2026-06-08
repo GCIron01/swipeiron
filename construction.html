@@ -1,1 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Construction Equipment - SwipeIron | Professional heavy equipment spec comparison">
+    <title>Construction Equipment | SwipeIron</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;family=Space+Grotesk:wght@500;600&amp;display=swap');
+        
+        body { font-family: 'Inter', system_ui, sans-serif; }
+        .font-display { font-family: 'Space Grotesk', 'Inter', sans-serif; font-weight: 600; }
+        
+        .equipment-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .equipment-card:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgb(15 23 42 / 0.1); }
+        
+        .nav-active { color: #f97316; font-weight: 600; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-200">
+    <!-- NAV -->
+    <nav class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 bg-[#f97316] rounded flex items-center justify-center text-white font-bold text-xl">S</div>
+                <div>
+                    <div class="font-display text-2xl font-semibold tracking-tighter">SwipeIron</div>
+                    <div class="text-[10px] text-slate-500 -mt-1">Swipe. Compare. Decide.</div>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-6 text-sm font-medium">
+                <a href="index.html" class="hover:text-[#f97316]">Home</a>
+                <a href="brands.html" class="hover:text-[#f97316]">Brands</a>
+                <a href="construction.html" class="nav-active">Construction</a>
+                <a href="aerial.html" class="hover:text-[#f97316]">Aerial</a>
+                <a href="models.html" class="hover:text-[#f97316]">All Models</a>
+                <a href="compare.html" class="hover:text-[#f97316] font-semibold">Compare</a>
+            </div>
+        </div>
+    </nav>
 
+    <!-- HEADER -->
+    <div class="max-w-7xl mx-auto px-6 pt-10 pb-6">
+        <div class="flex items-end justify-between">
+            <div>
+                <h1 class="text-5xl font-display font-bold tracking-tighter">Construction Equipment</h1>
+                <p class="text-xl text-slate-400 mt-2">Skid Steers, Compact Track Loaders &amp; more</p>
+            </div>
+            
+            <!-- Unit Toggle -->
+            <div class="flex items-center bg-slate-900 rounded-2xl p-1 border border-slate-800">
+                <button onclick="setUnit('us')" id="btn-us"
+                        class="px-5 py-2 rounded-xl text-sm font-medium transition-all bg-slate-700 text-white">
+                    Imperial (US)
+                </button>
+                <button onclick="setUnit('metric')" id="btn-metric"
+                        class="px-5 py-2 rounded-xl text-sm font-medium transition-all text-slate-400 hover:text-white">
+                    Metric
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EQUIPMENT GRID -->
+    <div class="max-w-7xl mx-auto px-6 pb-16">
+        <div id="equipment-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <!-- Populated by JavaScript -->
+        </div>
+    </div>
+
+    <!-- DISCLAIMER -->
+    <div class="max-w-7xl mx-auto px-6 pb-12">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 text-sm text-slate-400">
+            <p class="font-medium text-slate-300 mb-2">Disclaimer</p>
+            <p>SwipeIron is an independent equipment specification comparison platform. We are not affiliated with Caterpillar, John Deere, Kubota, or any other equipment manufacturer. All specifications are sourced from publicly available manufacturer documentation and are provided for reference only. Always verify critical specifications with the OEM before making purchasing or operational decisions. Data accuracy is not guaranteed.</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // ==================== SUPABASE CONFIG ====================
+        const SUPABASE_URL = 'https://kffjahvpapxekbjfhinm.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtmZmphaHZwYXB4ZWtiamZoaW5tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NjUxMDMsImV4cCI6MjA4OTQ0MTEwM30.EZkCFq0y6Mr9Rt5rn51khbif4aK_cd6ACE-6qw9MZgU';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        let equipmentDatabase = [];
+        let currentUnit = 'us';
+
+        // ==================== LOAD DATA ====================
+        async function loadConstructionEquipment() {
+            try {
+                const { data, error } = await supabase
+                    .from('equipment_models')
+                    .select('*')
+                    .eq('category', 'Construction')
+                    .order('brand', { ascending: true })
+                    .order('model', { ascending: true });
+
+                if (error) throw error;
+
+                equipmentDatabase = data || [];
+                renderEquipmentCards();
+                
+                console.log(`%c[Construction] Loaded ${equipmentDatabase.length} construction machines`, 'color:#f97316');
+            } catch (err) {
+                console.error('Error loading construction equipment:', err);
+                document.getElementById('equipment-grid').innerHTML = 
+                    `<div class="col-span-full text-center py-12 text-red-400">Failed to load equipment. Please refresh the page.</div>`;
+            }
+        }
+
+        // ==================== RENDER CARDS ====================
+        function renderEquipmentCards() {
+            const container = document.getElementById('equipment-grid');
+            container.innerHTML = '';
+
+            if (equipmentDatabase.length === 0) {
+                container.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400">No construction equipment found.</div>`;
+                return;
+            }
+
+            equipmentDatabase.forEach(model => {
+                const specs = model.specs || {};
+                
+                // Get values based on current unit
+                let weight = specs.operating_weight_lbs || 0;
+                let hp = specs.gross_hp || specs.net_hp || 0;
+                let capacity = specs.rated_operating_capacity_lbs || specs.rated_operating_capacity_35_lbs || 0;
+                
+                let weightUnit = 'lbs';
+                let capacityUnit = 'lbs';
+
+                if (currentUnit === 'metric') {
+                    weight = weight > 0 ? Math.round(weight * 0.4536) : 0;
+                    capacity = capacity > 0 ? Math.round(capacity * 0.4536) : 0;
+                    weightUnit = 'kg';
+                    capacityUnit = 'kg';
+                }
+
+                const card = document.createElement('div');
+                card.className = `equipment-card bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-3xl p-6 cursor-pointer`;
+                card.onclick = () => showModelDetail(model.id);
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-700 text-slate-200">
+                                    ${model.subcategory || 'Construction'}
+                                </span>
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-900 text-emerald-400">
+                                    <i class="fa-solid fa-gas-pump mr-1"></i> Diesel
+                                </span>
+                            </div>
+                            <div class="font-bold text-xl">${model.brand} ${model.model}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs text-slate-500">NEW</div>
+                            <div class="font-semibold text-[#f97316]">$${(model.new_price_usd || 0).toLocaleString()}</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-4 text-center mt-6">
+                        <div>
+                            <div class="text-xs text-slate-500">Operating Weight</div>
+                            <div class="text-2xl font-bold text-[#f97316]">${weight.toLocaleString()}</div>
+                            <div class="text-xs text-slate-500">${weightUnit}</div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-slate-500">Gross Power</div>
+                            <div class="text-2xl font-bold text-[#f97316]">${hp}</div>
+                            <div class="text-xs text-slate-500">hp</div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-slate-500">Operating Capacity</div>
+                            <div class="text-2xl font-bold text-[#f97316]">${capacity.toLocaleString()}</div>
+                            <div class="text-xs text-slate-500">${capacityUnit}</div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 pt-4 border-t border-slate-800 flex justify-between text-xs text-slate-400">
+                        <div>Click for full specs →</div>
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        // ==================== UNIT TOGGLE ====================
+        function setUnit(unit) {
+            currentUnit = unit;
+            
+            // Update button styles
+            const btnUs = document.getElementById('btn-us');
+            const btnMetric = document.getElementById('btn-metric');
+            
+            if (unit === 'us') {
+                btnUs.classList.add('bg-slate-700', 'text-white');
+                btnUs.classList.remove('text-slate-400');
+                btnMetric.classList.remove('bg-slate-700', 'text-white');
+                btnMetric.classList.add('text-slate-400');
+            } else {
+                btnMetric.classList.add('bg-slate-700', 'text-white');
+                btnMetric.classList.remove('text-slate-400');
+                btnUs.classList.remove('bg-slate-700', 'text-white');
+                btnUs.classList.add('text-slate-400');
+            }
+            
+            renderEquipmentCards();
+        }
+
+        // ==================== MODEL DETAIL ====================
+        function showModelDetail(id) {
+            const model = equipmentDatabase.find(m => m.id === id);
+            if (!model) return;
+
+            const container = document.getElementById('equipment-grid');
+            container.innerHTML = `
+                <div class="col-span-full">
+                    <button onclick="location.reload()" class="mb-6 flex items-center gap-2 text-slate-400 hover:text-white">
+                        <i class="fa-solid fa-arrow-left"></i> Back to Construction Equipment
+                    </button>
+                    
+                    <div class="bg-slate-900 rounded-3xl p-8">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="text-sm text-orange-500 font-semibold">${model.subcategory}</div>
+                                <h1 class="text-5xl font-bold">${model.brand} ${model.model}</h1>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xs text-slate-500">NEW PRICE</div>
+                                <div class="text-3xl font-bold text-[#f97316]">$${(model.new_price_usd || 0).toLocaleString()}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-8 grid grid-cols-2 md:grid-cols-4 gap-6">
+                            <div class="bg-slate-950 rounded-2xl p-5">
+                                <div class="text-xs text-slate-500">OPERATING WEIGHT</div>
+                                <div class="text-3xl font-bold text-[#f97316] mt-1">${(model.specs?.operating_weight_lbs || 0).toLocaleString()} <span class="text-base font-normal">lbs</span></div>
+                            </div>
+                            <div class="bg-slate-950 rounded-2xl p-5">
+                                <div class="text-xs text-slate-500">GROSS POWER</div>
+                                <div class="text-3xl font-bold text-[#f97316] mt-1">${model.specs?.gross_hp || model.specs?.net_hp || 0} <span class="text-base font-normal">hp</span></div>
+                            </div>
+                            <div class="bg-slate-950 rounded-2xl p-5">
+                                <div class="text-xs text-slate-500">RATED CAPACITY (35%)</div>
+                                <div class="text-3xl font-bold text-[#f97316] mt-1">${(model.specs?.rated_operating_capacity_lbs || model.specs?.rated_operating_capacity_35_lbs || 0).toLocaleString()} <span class="text-base font-normal">lbs</span></div>
+                            </div>
+                            <div class="bg-slate-950 rounded-2xl p-5">
+                                <div class="text-xs text-slate-500">TIPPING LOAD</div>
+                                <div class="text-3xl font-bold text-[#f97316] mt-1">${(model.specs?.tipping_load_lbs || 0).toLocaleString()} <span class="text-base font-normal">lbs</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ==================== INIT ====================
+        async function init() {
+            await loadConstructionEquipment();
+            
+            // Default to Imperial
+            document.getElementById('btn-us').classList.add('bg-slate-700', 'text-white');
+            
+            console.log('%c[Construction Page] Initialized successfully', 'color:#f97316');
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
