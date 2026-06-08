@@ -277,10 +277,118 @@
         }
 
         function showModelDetail(id) {
-            const model = equipmentDatabase.find(m => m.id === id);
-            if (!model) return;
-            alert(`Full model detail coming soon for ${model.brand} ${model.model}`);
+    const model = equipmentDatabase.find(m => m.id === id);
+    if (!model) return;
+
+    const specs = model.specs || {};
+    
+    // Create modal
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black/70 flex items-center justify-center z-[100] p-4';
+    modal.innerHTML = `
+        <div class="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+            
+            <!-- Header -->
+            <div class="flex items-center justify-between px-8 py-6 border-b border-slate-700">
+                <div>
+                    <div class="flex items-center gap-3">
+                        <span class="px-4 py-1.5 rounded-full text-sm font-semibold bg-slate-700 text-slate-200">
+                            ${model.subcategory || model.category}
+                        </span>
+                        <span class="px-4 py-1.5 rounded-full text-sm font-semibold bg-emerald-900 text-emerald-400 flex items-center gap-2">
+                            <i class="fa-solid fa-gas-pump"></i> ${model.power_source || 'Diesel'}
+                        </span>
+                    </div>
+                    <h2 class="text-4xl font-bold mt-3">${model.brand} ${model.model}</h2>
+                </div>
+                <button onclick="this.closest('.fixed').remove()" 
+                        class="text-slate-400 hover:text-white text-3xl leading-none">&times;</button>
+            </div>
+
+            <!-- Content -->
+            <div class="p-8 overflow-y-auto flex-1">
+                
+                <!-- Quick Stats -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                    ${createQuickStat('Operating Weight', specs.operating_weight_lbs, 'lbs')}
+                    ${createQuickStat('Net Power', specs.net_hp || specs.gross_hp, 'hp')}
+                    ${createQuickStat('Gross Power', specs.gross_hp, 'hp')}
+                    ${createQuickStat('Operating Capacity', specs.rated_operating_capacity_lbs, 'lbs')}
+                </div>
+
+                <!-- Full Specifications -->
+                <h3 class="text-xl font-semibold mb-4 text-slate-300">Full Specifications</h3>
+                
+                <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+                        ${renderSpecRows(specs)}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="px-8 py-5 border-t border-slate-700 bg-slate-950 flex justify-end">
+                <button onclick="this.closest('.fixed').remove()" 
+                        class="px-6 py-2.5 rounded-2xl bg-slate-700 hover:bg-slate-600 text-sm font-medium">
+                    Close
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+}
+
+// Helper: Quick stat cards
+function createQuickStat(label, value, unit) {
+    if (!value) return '';
+    return `
+        <div class="bg-slate-800 rounded-2xl p-4">
+            <div class="text-xs text-slate-400">${label}</div>
+            <div class="text-3xl font-bold text-[#f97316] mt-1">${Number(value).toLocaleString()}</div>
+            <div class="text-xs text-slate-500">${unit}</div>
+        </div>
+    `;
+}
+
+// Helper: Render all specs from JSONB
+function renderSpecRows(specs) {
+    let html = '';
+    
+    const priorityKeys = [
+        'net_hp', 'gross_hp', 'operating_weight_lbs', 'rated_operating_capacity_lbs', 
+        'tipping_load_lbs', 'max_dig_depth_ft', 'bucket_breakout_force_lbs',
+        'engine_model', 'fuel_type', 'undercarriage_type'
+    ];
+
+    // Show priority fields first
+    priorityKeys.forEach(key => {
+        if (specs[key]) {
+            const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            html += `
+                <div class="flex justify-between py-2 border-b border-slate-800">
+                    <span class="text-slate-400">${label}</span>
+                    <span class="font-medium text-white">${specs[key]}</span>
+                </div>
+            `;
         }
+    });
+
+    // Show remaining fields
+    Object.keys(specs).forEach(key => {
+        if (!priorityKeys.includes(key) && specs[key]) {
+            const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            html += `
+                <div class="flex justify-between py-2 border-b border-slate-800">
+                    <span class="text-slate-400">${label}</span>
+                    <span class="font-medium text-white">${specs[key]}</span>
+                </div>
+            `;
+        }
+    });
+
+    return html || '<p class="text-slate-400">No additional specifications available.</p>';
+}
 
         async function init() {
             document.getElementById('btn-us').classList.add('bg-slate-700', 'text-white');
