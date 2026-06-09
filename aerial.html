@@ -87,308 +87,311 @@
     </div>
 
     <script>
-        const SUPABASE_URL = 'https://kffjahvpapxekbjfhinm.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtmZmphaHZwYXB4ZWtiamZoaW5tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NjUxMDMsImV4cCI6MjA4OTQ0MTEwM30.EZkCFq0y6Mr9Rt5rn51khbif4aK_cd6ACE-6qw9MZgU';
-        
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        
-        let equipmentDatabase = [];
-        let filteredData = [];
-        let currentFilter = null;
-        let currentUnit = 'us';
+    const SUPABASE_URL = 'https://kffjahvpapxekbjfhinm.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtmZmphaHZwYXB4ZWtiamZoaW5tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NjUxMDMsImV4cCI6MjA4OTQ0MTEwM30.EZkCFq0y6Mr9Rt5rn51khbif4aK_cd6ACE-6qw9MZgU';
+    
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    let equipmentDatabase = [];
+    let filteredData = [];
+    let currentFilter = null;
+    let currentUnit = 'us';
+    let currentOpenModelId = null;   // NEW: Track currently open modal
 
-        async function loadAerialEquipment() {
-            const grid = document.getElementById('equipment-grid');
-            const countEl = document.getElementById('results-count');
+    async function loadAerialEquipment() {
+        const grid = document.getElementById('equipment-grid');
+        const countEl = document.getElementById('results-count');
 
-            grid.innerHTML = '';
-            countEl.innerHTML = 'Loading aerial equipment...';
+        grid.innerHTML = '';
+        countEl.innerHTML = 'Loading aerial equipment...';
 
-            try {
-                const { data, error } = await supabaseClient
-                    .from('equipment_models')
-                    .select('*')
-                    .eq('category', 'Aerial')
-                    .order('brand', { ascending: true });
+        try {
+            const { data, error } = await supabaseClient
+                .from('equipment_models')
+                .select('*')
+                .eq('category', 'Aerial')
+                .order('brand', { ascending: true });
 
-                if (error) throw error;
+            if (error) throw error;
 
-                equipmentDatabase = data || [];
-                filteredData = [...equipmentDatabase];
+            equipmentDatabase = data || [];
+            filteredData = [...equipmentDatabase];
 
-                renderFilters();
-                renderEquipmentCards();
-                updateResultsCount();
+            renderFilters();
+            renderEquipmentCards();
+            updateResultsCount();
 
-            } catch (err) {
-                grid.innerHTML = `<div class="text-red-400">Failed to load data.</div>`;
-            }
+        } catch (err) {
+            grid.innerHTML = `<div class="text-red-400">Failed to load data.</div>`;
         }
+    }
 
-        function renderFilters() {
-            const container = document.getElementById('filter-container');
-            container.innerHTML = '';
+    function renderFilters() {
+        const container = document.getElementById('filter-container');
+        container.innerHTML = '';
 
-            const subcategories = [...new Set(equipmentDatabase.map(m => m.subcategory).filter(Boolean))];
+        const subcategories = [...new Set(equipmentDatabase.map(m => m.subcategory).filter(Boolean))];
 
-            const allBtn = document.createElement('button');
-            allBtn.className = `filter-btn px-4 py-2 rounded-full text-sm border border-slate-700 hover:bg-slate-800 active bg-[#f97316] text-white border-[#f97316]`;
-            allBtn.textContent = 'All Aerial';
-            allBtn.onclick = () => {
-                currentFilter = null;
-                filteredData = [...equipmentDatabase];
-                updateActiveFilter(allBtn);
+        const allBtn = document.createElement('button');
+        allBtn.className = `filter-btn px-4 py-2 rounded-full text-sm border border-slate-700 hover:bg-slate-800 active bg-[#f97316] text-white border-[#f97316]`;
+        allBtn.textContent = 'All Aerial';
+        allBtn.onclick = () => {
+            currentFilter = null;
+            filteredData = [...equipmentDatabase];
+            updateActiveFilter(allBtn);
+            renderEquipmentCards();
+            updateResultsCount();
+        };
+        container.appendChild(allBtn);
+
+        subcategories.forEach(sub => {
+            const btn = document.createElement('button');
+            btn.className = `filter-btn px-4 py-2 rounded-full text-sm border border-slate-700 hover:bg-slate-800`;
+            btn.textContent = sub;
+            btn.onclick = () => {
+                currentFilter = sub;
+                filteredData = equipmentDatabase.filter(m => m.subcategory === sub);
+                updateActiveFilter(btn);
                 renderEquipmentCards();
                 updateResultsCount();
             };
-            container.appendChild(allBtn);
-
-            subcategories.forEach(sub => {
-                const btn = document.createElement('button');
-                btn.className = `filter-btn px-4 py-2 rounded-full text-sm border border-slate-700 hover:bg-slate-800`;
-                btn.textContent = sub;
-                btn.onclick = () => {
-                    currentFilter = sub;
-                    filteredData = equipmentDatabase.filter(m => m.subcategory === sub);
-                    updateActiveFilter(btn);
-                    renderEquipmentCards();
-                    updateResultsCount();
-                };
-                container.appendChild(btn);
-            });
-        }
-
-        function updateActiveFilter(activeBtn) {
-            document.querySelectorAll('#filter-container .filter-btn').forEach(btn => {
-                btn.classList.remove('active', 'bg-[#f97316]', 'text-white', 'border-[#f97316]');
-                btn.classList.add('border-slate-700');
-            });
-            activeBtn.classList.add('active', 'bg-[#f97316]', 'text-white', 'border-[#f97316]');
-        }
-
-        function resetFilters() {
-            currentFilter = null;
-            filteredData = [...equipmentDatabase];
-            document.querySelectorAll('#filter-container .filter-btn').forEach(btn => btn.classList.remove('active', 'bg-[#f97316]', 'text-white', 'border-[#f97316]'));
-            const allBtn = document.querySelector('#filter-container .filter-btn');
-            if (allBtn) allBtn.classList.add('active', 'bg-[#f97316]', 'text-white', 'border-[#f97316]');
-            renderEquipmentCards();
-            updateResultsCount();
-        }
-
-        function updateResultsCount() {
-            document.getElementById('results-count').innerHTML = `${filteredData.length} machines shown`;
-        }
-
-        function renderEquipmentCards() {
-            const container = document.getElementById('equipment-grid');
-            container.innerHTML = '';
-
-            filteredData.forEach(model => {
-                const specs = model.specs || {};
-                const subcategory = model.subcategory || '';
-
-                const isElectric = subcategory.toLowerCase().includes('electric');
-                const isEngine = subcategory.toLowerCase().includes('engine');
-                const isHybrid = subcategory.toLowerCase().includes('hybrid');
-                const isTelehandler = subcategory.includes('Telehandler');
-
-                let powerBadge = '';
-                if (isElectric) {
-                    powerBadge = `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-900 text-blue-400 flex items-center gap-1"><i class="fa-solid fa-bolt"></i> Electric</span>`;
-                } else if (isHybrid) {
-                    powerBadge = `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-purple-900 text-purple-400 flex items-center gap-1"><i class="fa-solid fa-sync"></i> Hybrid</span>`;
-                } else if (isEngine) {
-                    powerBadge = `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-amber-900 text-amber-400 flex items-center gap-1"><i class="fa-solid fa-gas-pump"></i> Engine</span>`;
-                }
-
-                let weight = specs.operating_weight_lbs || 0;
-                let platformHeight = specs.platform_height_elevated_ft || specs.platform_height_ft || 0;
-                let capacity = specs.platform_capacity_lbs || specs.lift_capacity_lbs || specs.rated_capacity_lbs || 0;
-
-                if (currentUnit === 'metric') {
-                    weight = Math.round(weight * 0.4536);
-                    platformHeight = platformHeight > 0 ? (platformHeight * 0.3048).toFixed(1) : 0;
-                    capacity = Math.round(capacity * 0.4536);
-                }
-
-                const card = document.createElement('div');
-                card.className = `equipment-card bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-3xl p-6 cursor-pointer`;
-                card.onclick = () => showModelDetail(model.id);
-
-                card.innerHTML = `
-                    <div class="flex justify-between items-start mb-4">
-                        <div>
-                            <div class="flex items-center gap-2 mb-2">
-                                <span class="px-3 py-1 rounded-full text-xs font-semibold bg-slate-700 text-slate-200">${subcategory}</span>
-                                ${powerBadge}
-                            </div>
-                            <div class="font-bold text-xl">${model.brand} ${model.model}</div>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-3 gap-4 text-center mt-6">
-                        <div>
-                            <div class="text-xs text-slate-500">Platform Height</div>
-                            <div class="text-2xl font-bold text-[#f97316]">${platformHeight}</div>
-                        </div>
-                        <div>
-                            <div class="text-xs text-slate-500">Capacity</div>
-                            <div class="text-2xl font-bold text-[#f97316]">${capacity}</div>
-                        </div>
-                        <div>
-                            <div class="text-xs text-slate-500">Weight</div>
-                            <div class="text-2xl font-bold text-[#f97316]">${weight}</div>
-                        </div>
-                    </div>
-                    <div class="mt-6 pt-4 border-t border-slate-800">
-                        <span class="text-xs text-slate-400">Click for full specs →</span>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        function setUnit(unit) {
-            currentUnit = unit;
-            const btnUs = document.getElementById('btn-us');
-            const btnMetric = document.getElementById('btn-metric');
-
-            if (unit === 'us') {
-                btnUs.classList.add('bg-slate-700', 'text-white');
-                btnUs.classList.remove('text-slate-400');
-                btnMetric.classList.remove('bg-slate-700', 'text-white');
-                btnMetric.classList.add('text-slate-400');
-            } else {
-                btnMetric.classList.add('bg-slate-700', 'text-white');
-                btnMetric.classList.remove('text-slate-400');
-                btnUs.classList.remove('bg-slate-700', 'text-white');
-                btnUs.classList.add('text-slate-400');
-            }
-            renderEquipmentCards();
-        }
-
-        // ==================== FULL POLISHED MODAL ====================
-        // ==================== FULL POLISHED MODAL ====================
-function showModelDetail(id) {
-    const model = equipmentDatabase.find(m => m.id === id);
-    if (!model) return;
-
-    const specs = model.specs || {};
-    const container = document.getElementById('page-content');
-
-    let height = specs.platform_height_elevated_ft || specs.platform_height_ft || 0;
-    let capacity = specs.platform_capacity_lbs || specs.lift_capacity_lbs || specs.rated_capacity_lbs || 0;
-    let weight = specs.operating_weight_lbs || 0;
-
-    if (currentUnit === 'metric') {
-        height = height > 0 ? (height * 0.3048).toFixed(1) : 0;
-        capacity = capacity > 0 ? Math.round(capacity * 0.4536) : 0;
-        weight = weight > 0 ? Math.round(weight * 0.4536) : 0;
+            container.appendChild(btn);
+        });
     }
 
-    const hUnit = currentUnit === 'us' ? 'ft' : 'm';
-    const cUnit = currentUnit === 'us' ? 'lbs' : 'kg';
-    const wUnit = currentUnit === 'us' ? 'lbs' : 'kg';
+    function updateActiveFilter(activeBtn) {
+        document.querySelectorAll('#filter-container .filter-btn').forEach(btn => {
+            btn.classList.remove('active', 'bg-[#f97316]', 'text-white', 'border-[#f97316]');
+            btn.classList.add('border-slate-700');
+        });
+        activeBtn.classList.add('active', 'bg-[#f97316]', 'text-white', 'border-[#f97316]');
+    }
 
-    let html = `
-        <div class="max-w-5xl mx-auto">
-            <!-- Back Button -->
-            <button onclick="location.reload()" 
-                    class="mb-6 flex items-center gap-2 text-slate-400 hover:text-white transition-colors">
-                <i class="fa-solid fa-arrow-left"></i> 
-                <span>Back to Aerial</span>
-            </button>
+    function resetFilters() {
+        currentFilter = null;
+        filteredData = [...equipmentDatabase];
+        document.querySelectorAll('#filter-container .filter-btn').forEach(btn => btn.classList.remove('active', 'bg-[#f97316]', 'text-white', 'border-[#f97316]'));
+        const allBtn = document.querySelector('#filter-container .filter-btn');
+        if (allBtn) allBtn.classList.add('active', 'bg-[#f97316]', 'text-white', 'border-[#f97316]');
+        renderEquipmentCards();
+        updateResultsCount();
+    }
 
-            <div class="bg-slate-900 rounded-3xl p-8">
-                
-                <!-- Header -->
-                <div class="flex justify-between items-start mb-8">
+    function updateResultsCount() {
+        document.getElementById('results-count').innerHTML = `${filteredData.length} machines shown`;
+    }
+
+    function renderEquipmentCards() {
+        const container = document.getElementById('equipment-grid');
+        container.innerHTML = '';
+
+        filteredData.forEach(model => {
+            const specs = model.specs || {};
+            const subcategory = model.subcategory || '';
+
+            const isElectric = subcategory.toLowerCase().includes('electric');
+            const isEngine = subcategory.toLowerCase().includes('engine');
+            const isHybrid = subcategory.toLowerCase().includes('hybrid');
+            const isTelehandler = subcategory.includes('Telehandler');
+
+            let powerBadge = '';
+            if (isElectric) {
+                powerBadge = `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-900 text-blue-400 flex items-center gap-1"><i class="fa-solid fa-bolt"></i> Electric</span>`;
+            } else if (isHybrid) {
+                powerBadge = `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-purple-900 text-purple-400 flex items-center gap-1"><i class="fa-solid fa-sync"></i> Hybrid</span>`;
+            } else if (isEngine) {
+                powerBadge = `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-amber-900 text-amber-400 flex items-center gap-1"><i class="fa-solid fa-gas-pump"></i> Engine</span>`;
+            }
+
+            let weight = specs.operating_weight_lbs || 0;
+            let platformHeight = specs.platform_height_elevated_ft || specs.platform_height_ft || 0;
+            let capacity = specs.platform_capacity_lbs || specs.lift_capacity_lbs || specs.rated_capacity_lbs || 0;
+
+            if (currentUnit === 'metric') {
+                weight = Math.round(weight * 0.4536);
+                platformHeight = platformHeight > 0 ? (platformHeight * 0.3048).toFixed(1) : 0;
+                capacity = Math.round(capacity * 0.4536);
+            }
+
+            const card = document.createElement('div');
+            card.className = `equipment-card bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-3xl p-6 cursor-pointer`;
+            card.onclick = () => showModelDetail(model.id);
+
+            card.innerHTML = `
+                <div class="flex justify-between items-start mb-4">
                     <div>
-                        <div class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-900 text-emerald-400 mb-3">
-                            ${model.subcategory || 'Electric Powered Scissor Lift'}
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-slate-700 text-slate-200">${subcategory}</span>
+                            ${powerBadge}
                         </div>
-                        <h1 class="text-5xl font-bold tracking-tight">${model.brand} ${model.model}</h1>
-                    </div>
-                    <div class="px-4 py-1.5 rounded-full text-sm font-semibold bg-emerald-900 text-emerald-400 flex items-center gap-2">
-                        <i class="fa-solid fa-bolt"></i>
-                        <span>Electric</span>
+                        <div class="font-bold text-xl">${model.brand} ${model.model}</div>
                     </div>
                 </div>
-
-                <!-- Quick Stats -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
-                    <div class="bg-slate-800 rounded-2xl p-6">
-                        <div class="text-xs text-slate-400 mb-1">Platform Height</div>
-                        <div class="text-5xl font-bold text-[#f97316]">${height}</div>
-                        <div class="text-sm text-slate-400 mt-1">${hUnit}</div>
+                <div class="grid grid-cols-3 gap-4 text-center mt-6">
+                    <div>
+                        <div class="text-xs text-slate-500">Platform Height</div>
+                        <div class="text-2xl font-bold text-[#f97316]">${platformHeight}</div>
                     </div>
-                    <div class="bg-slate-800 rounded-2xl p-6">
-                        <div class="text-xs text-slate-400 mb-1">Capacity</div>
-                        <div class="text-5xl font-bold text-[#f97316]">${capacity.toLocaleString()}</div>
-                        <div class="text-sm text-slate-400 mt-1">${cUnit}</div>
+                    <div>
+                        <div class="text-xs text-slate-500">Capacity</div>
+                        <div class="text-2xl font-bold text-[#f97316]">${capacity}</div>
                     </div>
-                    <div class="bg-slate-800 rounded-2xl p-6">
-                        <div class="text-xs text-slate-400 mb-1">Operating Weight</div>
-                        <div class="text-5xl font-bold text-[#f97316]">${weight.toLocaleString()}</div>
-                        <div class="text-sm text-slate-400 mt-1">${wUnit}</div>
+                    <div>
+                        <div class="text-xs text-slate-500">Weight</div>
+                        <div class="text-2xl font-bold text-[#f97316]">${weight}</div>
                     </div>
                 </div>
+                <div class="mt-6 pt-4 border-t border-slate-800">
+                    <span class="text-xs text-slate-400">Click for full specs →</span>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
 
-                <!-- Full Specifications -->
-                <h3 class="text-xl font-semibold mb-4">Full Specifications</h3>
-                <div class="bg-slate-800 rounded-2xl p-6 mb-10">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
-                        ${Object.entries(specs).map(([key, value]) => {
-                            if (key === 'notes') return '';
-                            const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                            return `
-                                <div class="flex justify-between border-b border-slate-700 pb-2">
-                                    <span class="text-slate-400">${label}</span>
-                                    <span class="font-medium text-white">${value}</span>
+    function setUnit(unit) {
+        currentUnit = unit;
+
+        const btnUs = document.getElementById('btn-us');
+        const btnMetric = document.getElementById('btn-metric');
+
+        if (unit === 'us') {
+            btnUs.classList.add('bg-slate-700', 'text-white');
+            btnUs.classList.remove('text-slate-400');
+            btnMetric.classList.remove('bg-slate-700', 'text-white');
+            btnMetric.classList.add('text-slate-400');
+        } else {
+            btnMetric.classList.add('bg-slate-700', 'text-white');
+            btnMetric.classList.remove('text-slate-400');
+            btnUs.classList.remove('bg-slate-700', 'text-white');
+            btnUs.classList.add('text-slate-400');
+        }
+
+        renderEquipmentCards();
+
+        // Refresh modal if it's currently open
+        if (currentOpenModelId !== null) {
+            showModelDetail(currentOpenModelId);
+        }
+    }
+
+    // ==================== FULL POLISHED MODAL ====================
+    function showModelDetail(id) {
+        const model = equipmentDatabase.find(m => m.id === id);
+        if (!model) return;
+
+        currentOpenModelId = id;   // NEW: Remember which model is open
+
+        const specs = model.specs || {};
+        const container = document.getElementById('page-content');
+
+        let height = specs.platform_height_elevated_ft || specs.platform_height_ft || 0;
+        let capacity = specs.platform_capacity_lbs || specs.lift_capacity_lbs || specs.rated_capacity_lbs || 0;
+        let weight = specs.operating_weight_lbs || 0;
+
+        if (currentUnit === 'metric') {
+            height = height > 0 ? (height * 0.3048).toFixed(1) : 0;
+            capacity = capacity > 0 ? Math.round(capacity * 0.4536) : 0;
+            weight = weight > 0 ? Math.round(weight * 0.4536) : 0;
+        }
+
+        const hUnit = currentUnit === 'us' ? 'ft' : 'm';
+        const cUnit = currentUnit === 'us' ? 'lbs' : 'kg';
+        const wUnit = currentUnit === 'us' ? 'lbs' : 'kg';
+
+        let html = `
+            <div class="max-w-5xl mx-auto">
+                <button onclick="location.reload()" 
+                        class="mb-6 flex items-center gap-2 text-slate-400 hover:text-white transition-colors">
+                    <i class="fa-solid fa-arrow-left"></i> 
+                    <span>Back to Aerial</span>
+                </button>
+
+                <div class="bg-slate-900 rounded-3xl p-8">
+                    
+                    <div class="flex justify-between items-start mb-8">
+                        <div>
+                            <div class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-900 text-emerald-400 mb-3">
+                                ${model.subcategory || 'Electric Powered Scissor Lift'}
+                            </div>
+                            <h1 class="text-5xl font-bold tracking-tight">${model.brand} ${model.model}</h1>
+                        </div>
+                        <div class="px-4 py-1.5 rounded-full text-sm font-semibold bg-emerald-900 text-emerald-400 flex items-center gap-2">
+                            <i class="fa-solid fa-bolt"></i>
+                            <span>Electric</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+                        <div class="bg-slate-800 rounded-2xl p-6">
+                            <div class="text-xs text-slate-400 mb-1">Platform Height</div>
+                            <div class="text-5xl font-bold text-[#f97316]">${height}</div>
+                            <div class="text-sm text-slate-400 mt-1">${hUnit}</div>
+                        </div>
+                        <div class="bg-slate-800 rounded-2xl p-6">
+                            <div class="text-xs text-slate-400 mb-1">Capacity</div>
+                            <div class="text-5xl font-bold text-[#f97316]">${capacity.toLocaleString()}</div>
+                            <div class="text-sm text-slate-400 mt-1">${cUnit}</div>
+                        </div>
+                        <div class="bg-slate-800 rounded-2xl p-6">
+                            <div class="text-xs text-slate-400 mb-1">Operating Weight</div>
+                            <div class="text-5xl font-bold text-[#f97316]">${weight.toLocaleString()}</div>
+                            <div class="text-sm text-slate-400 mt-1">${wUnit}</div>
+                        </div>
+                    </div>
+
+                    <h3 class="text-xl font-semibold mb-4">Full Specifications</h3>
+                    <div class="bg-slate-800 rounded-2xl p-6 mb-10">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+                            ${Object.entries(specs).map(([key, value]) => {
+                                if (key === 'notes') return '';
+                                const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                                return `
+                                    <div class="flex justify-between border-b border-slate-700 pb-2">
+                                        <span class="text-slate-400">${label}</span>
+                                        <span class="font-medium text-white">${value}</span>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+
+                    <h3 class="text-xl font-semibold mb-4">Standard Equipment</h3>
+                    <div class="bg-slate-800 rounded-2xl p-6 mb-10">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm">
+                            ${(model.standard_equipment || []).map(item => `
+                                <div class="flex items-start gap-2 py-1">
+                                    <i class="fa-solid fa-check text-emerald-400 mt-1"></i>
+                                    <span>${item}</span>
                                 </div>
-                            `;
-                        }).join('')}
+                            `).join('')}
+                        </div>
                     </div>
-                </div>
 
-                <!-- Standard Equipment -->
-                <h3 class="text-xl font-semibold mb-4">Standard Equipment</h3>
-                <div class="bg-slate-800 rounded-2xl p-6 mb-10">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm">
-                        ${(model.standard_equipment || []).map(item => `
-                            <div class="flex items-start gap-2 py-1">
-                                <i class="fa-solid fa-check text-emerald-400 mt-1"></i>
-                                <span>${item}</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-
-                <!-- Options & Accessories -->
-                <h3 class="text-xl font-semibold mb-4">Options & Accessories</h3>
-                <div class="bg-slate-800 rounded-2xl p-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm">
-                        ${(model.options_accessories || []).map(item => `
-                            <div class="flex items-start gap-2 py-1">
-                                <i class="fa-solid fa-plus text-orange-400 mt-1"></i>
-                                <span>${item}</span>
-                            </div>
-                        `).join('')}
+                    <h3 class="text-xl font-semibold mb-4">Options & Accessories</h3>
+                    <div class="bg-slate-800 rounded-2xl p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm">
+                            ${(model.options_accessories || []).map(item => `
+                                <div class="flex items-start gap-2 py-1">
+                                    <i class="fa-solid fa-plus text-orange-400 mt-1"></i>
+                                    <span>${item}</span>
+                                </div>
+                            `).join('')}
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    `;
+        `;
 
-    container.innerHTML = html;
-}
+        container.innerHTML = html;
+    }
 
-        async function init() {
-            document.getElementById('btn-us').classList.add('bg-slate-700', 'text-white');
-            await loadAerialEquipment();
-        }
+    async function init() {
+        document.getElementById('btn-us').classList.add('bg-slate-700', 'text-white');
+        await loadAerialEquipment();
+    }
 
-        window.onload = init;
-    </script>
+    window.onload = init;
+</script>
 </body>
 </html>
