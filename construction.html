@@ -11,6 +11,11 @@
         body { font-family: 'Inter', system_ui, sans-serif; }
         .equipment-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .equipment-card:hover { transform: translateY(-4px); }
+        .filter-btn.active {
+            background-color: #f97316;
+            color: white;
+            border-color: #f97316;
+        }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-200">
@@ -37,50 +42,55 @@
     </nav>
 
     <!-- HEADER -->
-    <div class="max-w-7xl mx-auto px-6 pt-10 pb-6 flex items-end justify-between">
-        <div>
-            <h1 class="text-5xl font-bold tracking-tighter">Construction Equipment</h1>
-            <p class="text-xl text-slate-400 mt-1">Mini Excvators, Skid Steers, Compact Track Loaders &amp; more</p>
+    <div class="max-w-7xl mx-auto px-6 pt-10 pb-6">
+        <div class="flex items-end justify-between">
+            <div>
+                <h1 class="text-5xl font-bold tracking-tighter">Construction Equipment</h1>
+                <p class="text-xl text-slate-400 mt-1">Mini Excavators, Skid Steers, Compact Track Loaders &amp; more</p>
+            </div>
+
+            <!-- Unit Toggle -->
+            <div class="flex items-center bg-slate-900 rounded-2xl p-1 border border-slate-800">
+                <button onclick="setUnit('us')" id="btn-us"
+                        class="px-5 py-2 rounded-xl text-sm font-medium bg-slate-700 text-white">Imperial (US)</button>
+                <button onclick="setUnit('metric')" id="btn-metric"
+                        class="px-5 py-2 rounded-xl text-sm font-medium text-slate-400 hover:text-white">Metric</button>
+            </div>
         </div>
 
-        <!-- Unit Toggle -->
-        <div class="flex items-center bg-slate-900 rounded-2xl p-1 border border-slate-800">
-            <button onclick="setUnit('us')" id="btn-us"
-                    class="px-5 py-2 rounded-xl text-sm font-medium bg-slate-700 text-white">Imperial (US)</button>
-            <button onclick="setUnit('metric')" id="btn-metric"
-                    class="px-5 py-2 rounded-xl text-sm font-medium text-slate-400 hover:text-white">Metric</button>
-        </div>
+        <!-- Dynamic Subcategory Filters -->
+        <div id="filter-container" class="flex flex-wrap gap-2 mt-6"></div>
     </div>
 
-    <!-- STATS -->
-    <div class="max-w-7xl mx-auto px-6 mb-4">
+    <div class="max-w-7xl mx-auto px-6 mb-4 flex items-center justify-between">
         <div id="results-count" class="text-sm text-slate-400"></div>
+        <button onclick="resetFilters()" class="text-sm text-orange-400 hover:text-orange-300 flex items-center gap-2">
+            <i class="fa-solid fa-times"></i> Clear Filters
+        </button>
     </div>
 
     <!-- EQUIPMENT GRID -->
     <div class="max-w-7xl mx-auto px-6 pb-12">
-        <div id="equipment-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            <!-- Populated by JavaScript -->
-        </div>
+        <div id="equipment-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
     </div>
 
     <!-- DISCLAIMER -->
     <div class="max-w-7xl mx-auto px-6 pb-12">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 text-sm text-slate-400">
             <p class="font-medium text-slate-300 mb-2">Disclaimer</p>
-            <p>SwipeIron is an independent equipment specification comparison platform. We are not affiliated with Caterpillar, John Deere, Kubota, or any other equipment manufacturer. All specifications are sourced from publicly available manufacturer documentation and are provided for reference only. Always verify critical specifications with the OEM before making purchasing or operational decisions.</p>
+            <p>SwipeIron is an independent equipment specification comparison platform. We are not affiliated with Caterpillar, John Deere, Kubota, or any other manufacturer.</p>
         </div>
     </div>
 
     <script>
-        // ==================== SUPABASE ====================
         const SUPABASE_URL = 'https://kffjahvpapxekbjfhinm.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtmZmphaHZwYXB4ZWtiamZoaW5tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NjUxMDMsImV4cCI6MjA4OTQ0MTEwM30.EZkCFq0y6Mr9Rt5rn51khbif4aK_cd6ACE-6qw9MZgU';
         
-        // FIX: Use a different variable name to avoid conflict with the global 'supabase'
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
         let equipmentDatabase = [];
+        let filteredData = [];
+        let currentFilter = null;
         let currentUnit = 'us';
 
         async function loadConstructionEquipment() {
@@ -88,7 +98,7 @@
             const countEl = document.getElementById('results-count');
 
             grid.innerHTML = '';
-            countEl.innerHTML = 'Loading equipment...';
+            countEl.innerHTML = 'Loading construction equipment...';
 
             try {
                 const { data, error } = await supabaseClient
@@ -100,162 +110,149 @@
                 if (error) throw error;
 
                 equipmentDatabase = data || [];
+                filteredData = [...equipmentDatabase];
 
-                if (equipmentDatabase.length === 0) {
-                    grid.innerHTML = `
-                        <div class="col-span-full bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center">
-                            <p class="text-lg text-slate-300">No construction equipment found.</p>
-                            <p class="text-sm text-slate-500 mt-2">Please check that the 'category' column contains the value 'Construction'</p>
-                        </div>`;
-                    countEl.innerHTML = '';
-                } else {
-                    countEl.innerHTML = `${equipmentDatabase.length} machines loaded`;
-                    renderEquipmentCards();
-                }
-
-                console.log('%c[Construction] Loaded ' + equipmentDatabase.length + ' machines', 'color:#f97316');
+                renderFilters();
+                renderEquipmentCards();
+                updateResultsCount();
 
             } catch (err) {
-                console.error('Supabase Error:', err);
-                grid.innerHTML = `
-                    <div class="col-span-full bg-red-900/20 border border-red-800 rounded-3xl p-8 text-center">
-                        <p class="text-red-400 font-medium">Failed to load from Supabase</p>
-                        <p class="text-sm text-red-400/70 mt-1">${err.message}</p>
-                    </div>`;
-                countEl.innerHTML = '';
+                grid.innerHTML = `<div class="text-red-400">Failed to load data.</div>`;
             }
         }
 
+        // ==================== DYNAMIC FILTERS ====================
+        function renderFilters() {
+            const container = document.getElementById('filter-container');
+            container.innerHTML = '';
+
+            const subcategories = [...new Set(equipmentDatabase.map(m => m.subcategory).filter(Boolean))];
+
+            // All button
+            const allBtn = document.createElement('button');
+            allBtn.className = `filter-btn px-4 py-2 rounded-full text-sm border border-slate-700 hover:bg-slate-800 active bg-[#f97316] text-white border-[#f97316]`;
+            allBtn.textContent = 'All Construction';
+            allBtn.onclick = () => {
+                currentFilter = null;
+                filteredData = [...equipmentDatabase];
+                updateActiveFilter(allBtn);
+                renderEquipmentCards();
+                updateResultsCount();
+            };
+            container.appendChild(allBtn);
+
+            subcategories.forEach(sub => {
+                const btn = document.createElement('button');
+                btn.className = `filter-btn px-4 py-2 rounded-full text-sm border border-slate-700 hover:bg-slate-800`;
+                btn.textContent = sub;
+                btn.onclick = () => {
+                    currentFilter = sub;
+                    filteredData = equipmentDatabase.filter(m => m.subcategory === sub);
+                    updateActiveFilter(btn);
+                    renderEquipmentCards();
+                    updateResultsCount();
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function updateActiveFilter(activeBtn) {
+            document.querySelectorAll('#filter-container .filter-btn').forEach(btn => {
+                btn.classList.remove('active', 'bg-[#f97316]', 'text-white', 'border-[#f97316]');
+                btn.classList.add('border-slate-700');
+            });
+            activeBtn.classList.add('active', 'bg-[#f97316]', 'text-white', 'border-[#f97316]');
+        }
+
+        function resetFilters() {
+            currentFilter = null;
+            filteredData = [...equipmentDatabase];
+            document.querySelectorAll('#filter-container .filter-btn').forEach(btn => btn.classList.remove('active', 'bg-[#f97316]', 'text-white', 'border-[#f97316]'));
+            const allBtn = document.querySelector('#filter-container .filter-btn');
+            if (allBtn) allBtn.classList.add('active', 'bg-[#f97316]', 'text-white', 'border-[#f97316]');
+            renderEquipmentCards();
+            updateResultsCount();
+        }
+
+        function updateResultsCount() {
+            document.getElementById('results-count').innerHTML = `${filteredData.length} machines shown`;
+        }
+
+        // ==================== RENDER CARDS ====================
         function renderEquipmentCards() {
-    const container = document.getElementById('equipment-grid');
-    container.innerHTML = '';
+            const container = document.getElementById('equipment-grid');
+            container.innerHTML = '';
 
-    equipmentDatabase.forEach(model => {
-        const specs = model.specs || {};
-        const subcategory = model.subcategory || '';
+            filteredData.forEach(model => {
+                const specs = model.specs || {};
+                const subcategory = model.subcategory || '';
 
-        let cardHTML = '';
+                const isMiniExcavator = subcategory.includes('Mini Excavator');
+                const isSkidOrCTL = subcategory.includes('Skid Steer') || subcategory.includes('Compact Track');
 
-        // ==================== MINI EXCAVATOR ====================
-        if (subcategory === 'Mini Excavator') {
-            let weight = specs.operating_weight_lbs || 0;
-            let netPower = specs.net_hp || specs.gross_hp || 0;
-            let digDepth = specs.max_dig_depth_ft || specs.dig_depth_ft || 0;
+                let weight = specs.operating_weight_lbs || 0;
+                let hp = specs.gross_hp || specs.net_hp || 0;
+                let capacity = specs.rated_operating_capacity_lbs || specs.rated_operating_capacity_35_lbs || 0;
+                let digDepth = specs.max_dig_depth_ft || 0;
 
-            let wUnit = 'lbs';
-            let dUnit = 'ft';
+                if (currentUnit === 'metric') {
+                    weight = Math.round(weight * 0.4536);
+                    capacity = Math.round(capacity * 0.4536);
+                    digDepth = digDepth > 0 ? (digDepth * 0.3048).toFixed(1) : 0;
+                }
 
-            if (currentUnit === 'metric') {
-                weight = weight > 0 ? Math.round(weight * 0.4536) : 0;
-                digDepth = digDepth > 0 ? (digDepth * 0.3048).toFixed(1) : 0;
-                wUnit = 'kg';
-                dUnit = 'm';
-            }
+                const card = document.createElement('div');
+                card.className = `equipment-card bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-3xl p-6 cursor-pointer`;
+                card.onclick = () => showModelDetail(model.id);
 
-            cardHTML = `
-                <div class="flex justify-between items-start mb-4">
-                    <div>
-                        <div class="flex items-center gap-2 mb-1">
-                            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-slate-700 text-slate-200">
-                                ${subcategory}
-                            </span>
-                            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-900 text-emerald-400">
-                                <i class="fa-solid fa-gas-pump mr-1"></i>Diesel
-                            </span>
+                let statsHTML = '';
+
+                if (isMiniExcavator) {
+                    statsHTML = `
+                        <div class="grid grid-cols-3 gap-4 text-center mt-6">
+                            <div><div class="text-xs text-slate-500">Operating Weight</div><div class="text-2xl font-bold text-[#f97316]">${weight}</div></div>
+                            <div><div class="text-xs text-slate-500">Max Dig Depth</div><div class="text-2xl font-bold text-[#f97316]">${digDepth}</div></div>
+                            <div><div class="text-xs text-slate-500">Net Power</div><div class="text-2xl font-bold text-[#f97316]">${hp}</div></div>
                         </div>
-                        <div class="font-bold text-xl">${model.brand} ${model.model}</div>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-xs text-slate-500">NEW</div>
-                        <div class="font-semibold text-[#f97316]">$${(model.new_price_usd || 0).toLocaleString()}</div>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-3 gap-4 text-center mt-6">
-                    <div>
-                        <div class="text-xs text-slate-500">Operating Weight</div>
-                        <div class="text-2xl font-bold text-[#f97316]">${weight.toLocaleString()}</div>
-                        <div class="text-xs text-slate-500">${wUnit}</div>
-                    </div>
-                    <div>
-                        <div class="text-xs text-slate-500">Net Power</div>
-                        <div class="text-2xl font-bold text-[#f97316]">${netPower}</div>
-                        <div class="text-xs text-slate-500">hp</div>
-                    </div>
-                    <div>
-                        <div class="text-xs text-slate-500">Max Dig Depth</div>
-                        <div class="text-2xl font-bold text-[#f97316]">${digDepth}</div>
-                        <div class="text-xs text-slate-500">${dUnit}</div>
-                    </div>
-                </div>
-            `;
-
-        } 
-        // ==================== SKID STEER + COMPACT TRACK LOADER ====================
-        else {
-            let weight = specs.operating_weight_lbs || 0;
-            let hp = specs.gross_hp || specs.net_hp || 0;
-            let capacity = specs.rated_operating_capacity_lbs || specs.rated_operating_capacity_35_lbs || 0;
-
-            let wUnit = 'lbs', cUnit = 'lbs';
-
-            if (currentUnit === 'metric') {
-                weight = weight > 0 ? Math.round(weight * 0.4536) : 0;
-                capacity = capacity > 0 ? Math.round(capacity * 0.4536) : 0;
-                wUnit = 'kg';
-                cUnit = 'kg';
-            }
-
-            cardHTML = `
-                <div class="flex justify-between items-start mb-4">
-                    <div>
-                        <div class="flex items-center gap-2 mb-1">
-                            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-slate-700 text-slate-200">
-                                ${subcategory}
-                            </span>
-                            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-900 text-emerald-400">
-                                <i class="fa-solid fa-gas-pump mr-1"></i>Diesel
-                            </span>
+                    `;
+                } else if (isSkidOrCTL) {
+                    statsHTML = `
+                        <div class="grid grid-cols-3 gap-4 text-center mt-6">
+                            <div><div class="text-xs text-slate-500">Operating Weight</div><div class="text-2xl font-bold text-[#f97316]">${weight}</div></div>
+                            <div><div class="text-xs text-slate-500">Operating Capacity</div><div class="text-2xl font-bold text-[#f97316]">${capacity}</div></div>
+                            <div><div class="text-xs text-slate-500">Gross Power</div><div class="text-2xl font-bold text-[#f97316]">${hp}</div></div>
                         </div>
-                        <div class="font-bold text-xl">${model.brand} ${model.model}</div>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-xs text-slate-500">NEW</div>
-                        <div class="font-semibold text-[#f97316]">$${(model.new_price_usd || 0).toLocaleString()}</div>
-                    </div>
-                </div>
+                    `;
+                } else {
+                    statsHTML = `
+                        <div class="grid grid-cols-3 gap-4 text-center mt-6">
+                            <div><div class="text-xs text-slate-500">Weight</div><div class="text-2xl font-bold text-[#f97316]">${weight}</div></div>
+                            <div><div class="text-xs text-slate-500">HP</div><div class="text-2xl font-bold text-[#f97316]">${hp}</div></div>
+                            <div><div class="text-xs text-slate-500">Capacity</div><div class="text-2xl font-bold text-[#f97316]">${capacity}</div></div>
+                        </div>
+                    `;
+                }
 
-                <div class="grid grid-cols-3 gap-4 text-center mt-6">
-                    <div>
-                        <div class="text-xs text-slate-500">Operating Weight</div>
-                        <div class="text-2xl font-bold text-[#f97316]">${weight.toLocaleString()}</div>
-                        <div class="text-xs text-slate-500">${wUnit}</div>
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="px-3 py-1 rounded-full text-xs font-semibold bg-slate-700 text-slate-200">${subcategory}</span>
+                                <span class="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-900 text-emerald-400 flex items-center gap-1">
+                                    <i class="fa-solid fa-gas-pump"></i> Diesel
+                                </span>
+                            </div>
+                            <div class="font-bold text-xl">${model.brand} ${model.model}</div>
+                        </div>
                     </div>
-                    <div>
-                        <div class="text-xs text-slate-500">Gross Power</div>
-                        <div class="text-2xl font-bold text-[#f97316]">${hp}</div>
-                        <div class="text-xs text-slate-500">hp</div>
+                    ${statsHTML}
+                    <div class="mt-6 pt-4 border-t border-slate-800">
+                        <span class="text-xs text-slate-400">Click for full specs →</span>
                     </div>
-                    <div>
-                        <div class="text-xs text-slate-500">Operating Capacity</div>
-                        <div class="text-2xl font-bold text-[#f97316]">${capacity.toLocaleString()}</div>
-                        <div class="text-xs text-slate-500">${cUnit}</div>
-                    </div>
-                </div>
-            `;
+                `;
+                container.appendChild(card);
+            });
         }
-
-        const card = document.createElement('div');
-        card.className = `equipment-card bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-3xl p-6 cursor-pointer`;
-        card.onclick = () => showModelDetail(model.id);
-        card.innerHTML = cardHTML + `
-            <div class="mt-6 pt-4 border-t border-slate-800 text-xs text-slate-400 flex justify-between">
-                <div>Click for full specs →</div>
-            </div>
-        `;
-        container.appendChild(card);
-    });
-}
 
         function setUnit(unit) {
             currentUnit = unit;
@@ -276,152 +273,115 @@
             renderEquipmentCards();
         }
 
+        // ==================== FULL POLISHED MODAL ====================
         function showModelDetail(id) {
-    const model = equipmentDatabase.find(m => m.id === id);
-    if (!model) return;
+            const model = equipmentDatabase.find(m => m.id === id);
+            if (!model) return;
 
-    const specs = model.specs || {};
-    const subcategory = model.subcategory || '';
+            const specs = model.specs || {};
+            const subcategory = model.subcategory || '';
 
-    // Determine best HP value
-    const hpValue = specs.net_hp || specs.gross_hp || specs.hp || null;
-    const hpLabel = specs.net_hp ? 'Net Power' : (specs.gross_hp ? 'Gross Power' : 'Horsepower');
+            const isMiniExcavator = subcategory.includes('Mini Excavator');
+            const isSkidOrCTL = subcategory.includes('Skid Steer') || subcategory.includes('Compact Track');
 
-    // Build the three quick stats based on subcategory
-    let quickStatsHTML = '';
+            const hpValue = specs.net_hp || specs.gross_hp || null;
+            const hpLabel = specs.net_hp ? 'Net Power' : (specs.gross_hp ? 'Gross Power' : 'Horsepower');
 
-    const isSkidSteerOrCTL = subcategory.includes('Skid Steer') || subcategory.includes('Compact Track');
+            let quickStatsHTML = '';
 
-    if (isSkidSteerOrCTL) {
-        // Skid Steers & Compact Track Loaders
-        quickStatsHTML = `
-            ${createQuickStat('Operating Weight', specs.operating_weight_lbs, 'lbs')}
-            ${createQuickStat('Operating Capacity', specs.rated_operating_capacity_lbs, 'lbs')}
-            ${createQuickStat(hpLabel, hpValue, 'hp')}
-        `;
-    } 
-    else if (subcategory.includes('Mini Excavator')) {
-        // Mini Excavators
-        const digDepthFt = specs.max_dig_depth_ft || specs.dig_depth_ft;
-        const digDepthIn = specs.max_dig_depth_in;
-        const digValue = digDepthFt || digDepthIn;
-        const digUnit = digDepthFt ? 'ft' : 'in';
+            if (isMiniExcavator) {
+                quickStatsHTML = `
+                    ${createQuickStat('Operating Weight', specs.operating_weight_lbs, 'lbs')}
+                    ${createQuickStat('Max Dig Depth', specs.max_dig_depth_ft, 'ft')}
+                    ${createQuickStat(hpLabel, hpValue, 'hp')}
+                `;
+            } else if (isSkidOrCTL) {
+                quickStatsHTML = `
+                    ${createQuickStat('Operating Weight', specs.operating_weight_lbs, 'lbs')}
+                    ${createQuickStat('Operating Capacity', specs.rated_operating_capacity_lbs || specs.rated_operating_capacity_35_lbs, 'lbs')}
+                    ${createQuickStat(hpLabel, hpValue, 'hp')}
+                `;
+            } else {
+                quickStatsHTML = `
+                    ${createQuickStat('Operating Weight', specs.operating_weight_lbs, 'lbs')}
+                    ${createQuickStat(hpLabel, hpValue, 'hp')}
+                    ${createQuickStat('Capacity', specs.rated_operating_capacity_lbs, 'lbs')}
+                `;
+            }
 
-        quickStatsHTML = `
-            ${createQuickStat('Operating Weight', specs.operating_weight_lbs, 'lbs')}
-            ${createQuickStat('Max Dig Depth', digValue, digUnit)}
-            ${createQuickStat(hpLabel, hpValue, 'hp')}
-        `;
-    } 
-    else {
-        // Default fallback
-        quickStatsHTML = `
-            ${createQuickStat('Operating Weight', specs.operating_weight_lbs, 'lbs')}
-            ${createQuickStat('Operating Capacity', specs.rated_operating_capacity_lbs, 'lbs')}
-            ${createQuickStat(hpLabel, hpValue, 'hp')}
-        `;
-    }
-
-    const modal = document.createElement('div');
-    modal.className = 'fixed inset-0 bg-black/70 flex items-center justify-center z-[100] p-4';
-    modal.innerHTML = `
-        <div class="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
-            
-            <!-- Header -->
-            <div class="flex items-center justify-between px-8 py-6 border-b border-slate-700">
-                <div>
-                    <div class="flex items-center gap-3">
-                        <span class="px-4 py-1.5 rounded-full text-sm font-semibold bg-slate-700 text-slate-200">
-                            ${subcategory || model.category}
-                        </span>
-                        <span class="px-4 py-1.5 rounded-full text-sm font-semibold bg-emerald-900 text-emerald-400 flex items-center gap-2">
-                            <i class="fa-solid fa-gas-pump"></i> ${model.power_source || 'Diesel'}
-                        </span>
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black/70 flex items-center justify-center z-[100] p-4';
+            modal.innerHTML = `
+                <div class="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+                    <div class="flex items-center justify-between px-8 py-6 border-b border-slate-700">
+                        <div>
+                            <div class="flex items-center gap-3">
+                                <span class="px-4 py-1.5 rounded-full text-sm font-semibold bg-slate-700 text-slate-200">${subcategory}</span>
+                                <span class="px-4 py-1.5 rounded-full text-sm font-semibold bg-emerald-900 text-emerald-400 flex items-center gap-2">
+                                    <i class="fa-solid fa-gas-pump"></i> Diesel
+                                </span>
+                            </div>
+                            <h2 class="text-4xl font-bold mt-3">${model.brand} ${model.model}</h2>
+                        </div>
+                        <button onclick="this.closest('.fixed').remove()" class="text-slate-400 hover:text-white text-3xl leading-none">&times;</button>
                     </div>
-                    <h2 class="text-4xl font-bold mt-3">${model.brand} ${model.model}</h2>
-                </div>
-                <button onclick="this.closest('.fixed').remove()" 
-                        class="text-slate-400 hover:text-white text-3xl leading-none">&times;</button>
-            </div>
 
-            <!-- Content -->
-            <div class="p-8 overflow-y-auto flex-1">
-                
-                <!-- Dynamic Top 3 Stats -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                    ${quickStatsHTML}
-                </div>
+                    <div class="p-8 overflow-y-auto flex-1">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                            ${quickStatsHTML}
+                        </div>
 
-                <!-- Full Specifications -->
-                <h3 class="text-xl font-semibold mb-4 text-slate-300">Full Specifications</h3>
-                
-                <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
-                        ${renderSpecRows(specs)}
+                        <h3 class="text-xl font-semibold mb-4 text-slate-300">Full Specifications</h3>
+                        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+                                ${renderSpecRows(specs)}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="px-8 py-5 border-t border-slate-700 bg-slate-950 flex justify-end">
+                        <button onclick="this.closest('.fixed').remove()" class="px-6 py-2.5 rounded-2xl bg-slate-700 hover:bg-slate-600 text-sm font-medium">Close</button>
                     </div>
                 </div>
-            </div>
+            `;
+            document.body.appendChild(modal);
+        }
 
-            <!-- Footer -->
-            <div class="px-8 py-5 border-t border-slate-700 bg-slate-950 flex justify-end">
-                <button onclick="this.closest('.fixed').remove()" 
-                        class="px-6 py-2.5 rounded-2xl bg-slate-700 hover:bg-slate-600 text-sm font-medium">
-                    Close
-                </button>
-            </div>
-        </div>
-    `;
-
-    document.body.appendChild(modal);
-}
-
-// Keep these two helper functions unchanged
-function createQuickStat(label, value, unit) {
-    if (!value) return '';
-    return `
-        <div class="bg-slate-800 rounded-2xl p-4">
-            <div class="text-xs text-slate-400">${label}</div>
-            <div class="text-3xl font-bold text-[#f97316] mt-1">${Number(value).toLocaleString()}</div>
-            <div class="text-xs text-slate-500">${unit}</div>
-        </div>
-    `;
-}
-
-function renderSpecRows(specs) {
-    let html = '';
-    
-    const priorityKeys = [
-        'net_hp', 'gross_hp', 'operating_weight_lbs', 'rated_operating_capacity_lbs', 
-        'tipping_load_lbs', 'max_dig_depth_ft', 'max_dig_depth_in', 'bucket_breakout_force_lbs',
-        'engine_model', 'fuel_type', 'undercarriage_type'
-    ];
-
-    priorityKeys.forEach(key => {
-        if (specs[key]) {
-            const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-            html += `
-                <div class="flex justify-between py-2 border-b border-slate-800">
-                    <span class="text-slate-400">${label}</span>
-                    <span class="font-medium text-white">${specs[key]}</span>
+        function createQuickStat(label, value, unit) {
+            if (!value) return '';
+            return `
+                <div class="bg-slate-800 rounded-2xl p-4">
+                    <div class="text-xs text-slate-400">${label}</div>
+                    <div class="text-3xl font-bold text-[#f97316] mt-1">${Number(value).toLocaleString()}</div>
+                    <div class="text-xs text-slate-500">${unit}</div>
                 </div>
             `;
         }
-    });
 
-    Object.keys(specs).forEach(key => {
-        if (!priorityKeys.includes(key) && specs[key]) {
-            const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-            html += `
-                <div class="flex justify-between py-2 border-b border-slate-800">
-                    <span class="text-slate-400">${label}</span>
-                    <span class="font-medium text-white">${specs[key]}</span>
-                </div>
-            `;
+        function renderSpecRows(specs) {
+            let html = '';
+            const priorityKeys = [
+                'gross_hp', 'net_hp', 'operating_weight_lbs', 'rated_operating_capacity_lbs',
+                'tipping_load_lbs', 'max_dig_depth_ft', 'bucket_breakout_force_lbs',
+                'lift_arm_breakout_force_lbs', 'engine_model', 'fuel_type'
+            ];
+
+            priorityKeys.forEach(key => {
+                if (specs[key]) {
+                    const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    html += `<div class="flex justify-between py-2 border-b border-slate-800"><span class="text-slate-400">${label}</span><span class="font-medium text-white">${specs[key]}</span></div>`;
+                }
+            });
+
+            Object.keys(specs).forEach(key => {
+                if (!priorityKeys.includes(key) && specs[key]) {
+                    const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    html += `<div class="flex justify-between py-2 border-b border-slate-800"><span class="text-slate-400">${label}</span><span class="font-medium text-white">${specs[key]}</span></div>`;
+                }
+            });
+
+            return html || '<p class="text-slate-400">No additional specifications available.</p>';
         }
-    });
-
-    return html || '<p class="text-slate-400">No additional specifications available.</p>';
-}
 
         async function init() {
             document.getElementById('btn-us').classList.add('bg-slate-700', 'text-white');
