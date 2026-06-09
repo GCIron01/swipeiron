@@ -180,61 +180,74 @@
 
         // ==================== RENDER CARDS ====================
         function renderEquipmentCards() {
-            const container = document.getElementById('equipment-grid');
-            container.innerHTML = '';
+    const container = document.getElementById('equipment-grid');
+    container.innerHTML = '';
 
-            filteredData.forEach(model => {
-                const specs = model.specs || {};
-                const subcategory = model.subcategory || '';
+    filteredData.forEach(model => {
+        const specs = model.specs || {};
+        const subcategory = model.subcategory || '';
 
-                const isRotating = subcategory.includes('Rotating');
+        const isRotating = subcategory.includes('Rotating');
+        const isElectric = subcategory.toLowerCase().includes('electric');
+        const isHybrid = subcategory.toLowerCase().includes('hybrid');
 
-                let weight = specs.operating_weight_lbs || 0;
-                let liftHeight = specs.max_lift_height_ft || 0;
-                let capacity = specs.rated_capacity_lbs || 0;
-                let hp = specs.gross_hp || specs.net_hp || 0;
-
-                if (currentUnit === 'metric') {
-                    weight = Math.round(weight * 0.4536);
-                    liftHeight = liftHeight > 0 ? (liftHeight * 0.3048).toFixed(1) : 0;
-                    capacity = Math.round(capacity * 0.4536);
-                }
-
-                const card = document.createElement('div');
-                card.className = `equipment-card bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-3xl p-6 cursor-pointer`;
-                card.onclick = () => showModelDetail(model.id);
-
-                // 360° badge for Rotating Telehandlers
-                const rotatingBadge = isRotating 
-                    ? `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-violet-600 text-white flex items-center gap-1"><i class="fa-solid fa-sync fa-spin-pulse"></i> 360°</span>` 
-                    : '';
-
-                const statsHTML = `
-                    <div class="grid grid-cols-3 gap-4 text-center mt-6">
-                        <div><div class="text-xs text-slate-500">Max Lift Height</div><div class="text-2xl font-bold text-[#f97316]">${liftHeight}</div></div>
-                        <div><div class="text-xs text-slate-500">Capacity</div><div class="text-2xl font-bold text-[#f97316]">${capacity}</div></div>
-                        <div><div class="text-xs text-slate-500">Weight</div><div class="text-2xl font-bold text-[#f97316]">${weight}</div></div>
-                    </div>
-                `;
-
-                card.innerHTML = `
-                    <div class="flex justify-between items-start mb-4">
-                        <div>
-                            <div class="flex items-center gap-2 mb-2">
-                                <span class="px-3 py-1 rounded-full text-xs font-semibold bg-slate-700 text-slate-200">${subcategory}</span>
-                                ${rotatingBadge}
-                            </div>
-                            <div class="font-bold text-xl">${model.brand} ${model.model}</div>
-                        </div>
-                    </div>
-                    ${statsHTML}
-                    <div class="mt-6 pt-4 border-t border-slate-800">
-                        <span class="text-xs text-slate-400">Click for full specs →</span>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
+        // Power source badge
+        let powerBadge = '';
+        if (isElectric) {
+            powerBadge = `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-900 text-blue-400 flex items-center gap-1"><i class="fa-solid fa-bolt"></i> Electric</span>`;
+        } else if (isHybrid) {
+            powerBadge = `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-purple-900 text-purple-400 flex items-center gap-1"><i class="fa-solid fa-sync"></i> Hybrid</span>`;
+        } else {
+            // Default for Telehandlers
+            powerBadge = `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-amber-900 text-amber-400 flex items-center gap-1"><i class="fa-solid fa-gas-pump"></i> Engine</span>`;
         }
+
+        // 360° badge for Rotating Telehandlers
+        const rotatingBadge = isRotating 
+            ? `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-violet-600 text-white flex items-center gap-1"><i class="fa-solid fa-sync fa-spin-pulse"></i> 360°</span>` 
+            : '';
+
+        let weight = specs.operating_weight_lbs || 0;
+        let liftHeight = specs.max_lift_height_ft || 0;
+        let capacity = specs.rated_capacity_lbs || 0;
+
+        if (currentUnit === 'metric') {
+            weight = Math.round(weight * 0.4536);
+            liftHeight = liftHeight > 0 ? (liftHeight * 0.3048).toFixed(1) : 0;
+            capacity = Math.round(capacity * 0.4536);
+        }
+
+        const card = document.createElement('div');
+        card.className = `equipment-card bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-3xl p-6 cursor-pointer`;
+        card.onclick = () => showModelDetail(model.id);
+
+        const statsHTML = `
+            <div class="grid grid-cols-3 gap-4 text-center mt-6">
+                <div><div class="text-xs text-slate-500">Max Lift Height</div><div class="text-2xl font-bold text-[#f97316]">${liftHeight}</div></div>
+                <div><div class="text-xs text-slate-500">Capacity</div><div class="text-2xl font-bold text-[#f97316]">${capacity}</div></div>
+                <div><div class="text-xs text-slate-500">Weight</div><div class="text-2xl font-bold text-[#f97316]">${weight}</div></div>
+            </div>
+        `;
+
+        card.innerHTML = `
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-slate-700 text-slate-200">${subcategory}</span>
+                        ${powerBadge}
+                        ${rotatingBadge}
+                    </div>
+                    <div class="font-bold text-xl">${model.brand} ${model.model}</div>
+                </div>
+            </div>
+            ${statsHTML}
+            <div class="mt-6 pt-4 border-t border-slate-800">
+                <span class="text-xs text-slate-400">Click for full specs →</span>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
 
         function setUnit(unit) {
             currentUnit = unit;
