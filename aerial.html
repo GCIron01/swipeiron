@@ -281,14 +281,15 @@ if (currentUnit === 'metric') {
         }
 
         // ==================== FULL POLISHED MODAL ====================
-        function showModelDetail(id) {
+        // ==================== FULL POLISHED MODAL ====================
+function showModelDetail(id) {
     const model = equipmentDatabase.find(m => m.id === id);
     if (!model) return;
 
     const specs = model.specs || {};
     const container = document.getElementById('page-content');
 
-    // ==================== VALUES ====================
+    // Get values
     let height = specs.platform_height_elevated_ft || specs.platform_height_ft || 0;
     let capacity = specs.platform_capacity_lbs || specs.lift_capacity_lbs || specs.rated_capacity_lbs || 0;
     let weight = specs.operating_weight_lbs || 0;
@@ -304,7 +305,6 @@ if (currentUnit === 'metric') {
     const cUnit = currentUnit === 'us' ? 'lbs' : 'kg';
     const wUnit = currentUnit === 'us' ? 'lbs' : 'kg';
 
-    // ==================== RENDER ====================
     let html = `
         <button onclick="showPage('aerial')" 
                 class="mb-6 flex items-center gap-2 text-slate-400 hover:text-white transition-colors">
@@ -389,7 +389,6 @@ if (currentUnit === 'metric') {
                     `).join('')}
                 </div>
             </div>
-
         </div>
     `;
 
