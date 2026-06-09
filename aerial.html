@@ -179,82 +179,73 @@
 
         // ==================== RENDER CARDS ====================
         function renderEquipmentCards() {
-    const container = document.getElementById('equipment-grid');
-    container.innerHTML = '';
+            const container = document.getElementById('equipment-grid');
+            container.innerHTML = '';
 
-    filteredData.forEach(model => {
-        const specs = model.specs || {};
-        const subcategory = model.subcategory || '';
+            filteredData.forEach(model => {
+                const specs = model.specs || {};
+                const subcategory = model.subcategory || '';
 
-        const isElectric = subcategory.toLowerCase().includes('electric');
-        const isEngine = subcategory.toLowerCase().includes('engine');
-        const isHybrid = subcategory.toLowerCase().includes('hybrid');
-        const isTelehandler = subcategory.includes('Telehandler');
+                const isScissorOrBoom = subcategory.includes('Scissor') || subcategory.includes('Boom');
+                const isTelehandler = subcategory.includes('Telehandler');
 
-        // Determine power badge
-        let powerBadge = '';
-        if (isElectric) {
-            powerBadge = `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-900 text-blue-400 flex items-center gap-1"><i class="fa-solid fa-bolt"></i> Electric</span>`;
-        } else if (isHybrid) {
-            powerBadge = `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-purple-900 text-purple-400 flex items-center gap-1"><i class="fa-solid fa-sync"></i> Hybrid</span>`;
-        } else if (isEngine) {
-            powerBadge = `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-amber-900 text-amber-400 flex items-center gap-1"><i class="fa-solid fa-gas-pump"></i> Engine</span>`;
-        }
+                let weight = specs.operating_weight_lbs || 0;
+                let platformHeight = specs.platform_height_elevated_ft || specs.platform_height_ft || 0;
+                let capacity = specs.platform_capacity_lbs || specs.rated_capacity_lbs || 0;
+                let liftHeight = specs.max_lift_height_ft || 0;
 
-        let weight = specs.operating_weight_lbs || 0;
-        let platformHeight = specs.platform_height_elevated_ft || specs.platform_height_ft || 0;
-        let capacity = specs.platform_capacity_lbs || specs.rated_capacity_lbs || 0;
-        let liftHeight = specs.max_lift_height_ft || 0;
+                if (currentUnit === 'metric') {
+                    weight = Math.round(weight * 0.4536);
+                    platformHeight = platformHeight > 0 ? (platformHeight * 0.3048).toFixed(1) : 0;
+                    capacity = Math.round(capacity * 0.4536);
+                    liftHeight = liftHeight > 0 ? (liftHeight * 0.3048).toFixed(1) : 0;
+                }
 
-        if (currentUnit === 'metric') {
-            weight = Math.round(weight * 0.4536);
-            platformHeight = platformHeight > 0 ? (platformHeight * 0.3048).toFixed(1) : 0;
-            capacity = Math.round(capacity * 0.4536);
-            liftHeight = liftHeight > 0 ? (liftHeight * 0.3048).toFixed(1) : 0;
-        }
+                const card = document.createElement('div');
+                card.className = `equipment-card bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-3xl p-6 cursor-pointer`;
+                card.onclick = () => showModelDetail(model.id);
 
-        const card = document.createElement('div');
-        card.className = `equipment-card bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-3xl p-6 cursor-pointer`;
-        card.onclick = () => showModelDetail(model.id);
+                let statsHTML = '';
 
-        let statsHTML = '';
+                if (isScissorOrBoom) {
+                    statsHTML = `
+                        <div class="grid grid-cols-3 gap-4 text-center mt-6">
+                            <div><div class="text-xs text-slate-500">Platform Height</div><div class="text-2xl font-bold text-[#f97316]">${platformHeight}</div></div>
+                            <div><div class="text-xs text-slate-500">Capacity</div><div class="text-2xl font-bold text-[#f97316]">${capacity}</div></div>
+                            <div><div class="text-xs text-slate-500">Weight</div><div class="text-2xl font-bold text-[#f97316]">${weight}</div></div>
+                        </div>
+                    `;
+                } else if (isTelehandler) {
+                    statsHTML = `
+                        <div class="grid grid-cols-3 gap-4 text-center mt-6">
+                            <div><div class="text-xs text-slate-500">Max Lift Height</div><div class="text-2xl font-bold text-[#f97316]">${liftHeight}</div></div>
+                            <div><div class="text-xs text-slate-500">Capacity</div><div class="text-2xl font-bold text-[#f97316]">${capacity}</div></div>
+                            <div><div class="text-xs text-slate-500">Weight</div><div class="text-2xl font-bold text-[#f97316]">${weight}</div></div>
+                        </div>
+                    `;
+                } else {
+                    statsHTML = `
+                        <div class="grid grid-cols-3 gap-4 text-center mt-6">
+                            <div><div class="text-xs text-slate-500">Weight</div><div class="text-2xl font-bold text-[#f97316]">${weight}</div></div>
+                            <div><div class="text-xs text-slate-500">HP</div><div class="text-2xl font-bold text-[#f97316]">${specs.net_hp || specs.gross_hp || 0}</div></div>
+                            <div><div class="text-xs text-slate-500">Capacity</div><div class="text-2xl font-bold text-[#f97316]">${capacity}</div></div>
+                        </div>
+                    `;
+                }
 
-        if (isTelehandler) {
-            statsHTML = `
-                <div class="grid grid-cols-3 gap-4 text-center mt-6">
-                    <div><div class="text-xs text-slate-500">Max Lift Height</div><div class="text-2xl font-bold text-[#f97316]">${liftHeight}</div></div>
-                    <div><div class="text-xs text-slate-500">Capacity</div><div class="text-2xl font-bold text-[#f97316]">${capacity}</div></div>
-                    <div><div class="text-xs text-slate-500">Weight</div><div class="text-2xl font-bold text-[#f97316]">${weight}</div></div>
-                </div>
-            `;
-        } else {
-            statsHTML = `
-                <div class="grid grid-cols-3 gap-4 text-center mt-6">
-                    <div><div class="text-xs text-slate-500">Platform Height</div><div class="text-2xl font-bold text-[#f97316]">${platformHeight}</div></div>
-                    <div><div class="text-xs text-slate-500">Capacity</div><div class="text-2xl font-bold text-[#f97316]">${capacity}</div></div>
-                    <div><div class="text-xs text-slate-500">Weight</div><div class="text-2xl font-bold text-[#f97316]">${weight}</div></div>
-                </div>
-            `;
-        }
-
-        card.innerHTML = `
-            <div class="flex justify-between items-start mb-4">
-                <div>
-                    <div class="flex items-center gap-2 mb-2">
-                        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-slate-700 text-slate-200">${subcategory}</span>
-                        ${powerBadge}
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-slate-700 text-slate-200">${subcategory}</span>
+                            <div class="font-bold text-xl mt-3">${model.brand} ${model.model}</div>
+                        </div>
                     </div>
-                    <div class="font-bold text-xl">${model.brand} ${model.model}</div>
-                </div>
-            </div>
-            ${statsHTML}
-            <div class="mt-6 pt-4 border-t border-slate-800 text-xs text-slate-400 flex justify-between items-center">
-                <span>Click for full specs →</span>
-            </div>
-        `;
-        container.appendChild(card);
-    });
-}
+                    ${statsHTML}
+                    <div class="mt-6 pt-4 border-t border-slate-800 text-xs text-slate-400">Click for full specs →</div>
+                `;
+                container.appendChild(card);
+            });
+        }
 
         function setUnit(unit) {
             currentUnit = unit;
