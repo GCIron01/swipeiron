@@ -257,54 +257,69 @@
 
         // ==================== FULL MODAL ====================
         function showModelDetail(id) {
-            const model = equipmentDatabase.find(m => m.id === id);
-            if (!model) return;
+    const model = equipmentDatabase.find(m => m.id === id);
+    if (!model) return;
 
-            const specs = model.specs || {};
-            const subcategory = model.subcategory || '';
-            const isRotating = subcategory.includes('Rotating');
+    const specs = model.specs || {};
+    const subcategory = model.subcategory || '';
 
-            const rotatingBadge = isRotating 
-                ? `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-violet-600 text-white flex items-center gap-1 ml-2"><i class="fa-solid fa-sync fa-spin-pulse"></i> 360°</span>` 
-                : '';
+    const isRotating = subcategory.includes('Rotating');
+    const isElectric = subcategory.toLowerCase().includes('electric');
+    const isHybrid = subcategory.toLowerCase().includes('hybrid');
 
-            const modal = document.createElement('div');
-            modal.className = 'fixed inset-0 bg-black/70 flex items-center justify-center z-[100] p-4';
-            modal.innerHTML = `
-                <div class="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
-                    <div class="flex items-center justify-between px-8 py-6 border-b border-slate-700">
-                        <div>
-                            <div class="flex items-center gap-3">
-                                <span class="px-4 py-1.5 rounded-full text-sm font-semibold bg-slate-700 text-slate-200">${subcategory}</span>
-                                ${rotatingBadge}
-                            </div>
-                            <h2 class="text-4xl font-bold mt-3">${model.brand} ${model.model}</h2>
-                        </div>
-                        <button onclick="this.closest('.fixed').remove()" class="text-slate-400 hover:text-white text-3xl leading-none">&times;</button>
+    // Power source badge
+    let powerBadge = '';
+    if (isElectric) {
+        powerBadge = `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-900 text-blue-400 flex items-center gap-1"><i class="fa-solid fa-bolt"></i> Electric</span>`;
+    } else if (isHybrid) {
+        powerBadge = `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-purple-900 text-purple-400 flex items-center gap-1"><i class="fa-solid fa-sync"></i> Hybrid</span>`;
+    } else {
+        powerBadge = `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-amber-900 text-amber-400 flex items-center gap-1"><i class="fa-solid fa-gas-pump"></i> Engine</span>`;
+    }
+
+    // 360° badge
+    const rotatingBadge = isRotating 
+        ? `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-violet-600 text-white flex items-center gap-1"><i class="fa-solid fa-sync fa-spin-pulse"></i> 360°</span>` 
+        : '';
+
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black/70 flex items-center justify-center z-[100] p-4';
+    modal.innerHTML = `
+        <div class="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="flex items-center justify-between px-8 py-6 border-b border-slate-700">
+                <div>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="px-4 py-1.5 rounded-full text-sm font-semibold bg-slate-700 text-slate-200">${subcategory}</span>
+                        ${powerBadge}
+                        ${rotatingBadge}
                     </div>
+                    <h2 class="text-4xl font-bold">${model.brand} ${model.model}</h2>
+                </div>
+                <button onclick="this.closest('.fixed').remove()" class="text-slate-400 hover:text-white text-3xl leading-none">&times;</button>
+            </div>
 
-                    <div class="p-8 overflow-y-auto flex-1">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                            ${createQuickStat('Max Lift Height', specs.max_lift_height_ft, 'ft')}
-                            ${createQuickStat('Capacity', specs.rated_capacity_lbs, 'lbs')}
-                            ${createQuickStat('Operating Weight', specs.operating_weight_lbs, 'lbs')}
-                        </div>
+            <div class="p-8 overflow-y-auto flex-1">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                    ${createQuickStat('Max Lift Height', specs.max_lift_height_ft, 'ft')}
+                    ${createQuickStat('Capacity', specs.rated_capacity_lbs, 'lbs')}
+                    ${createQuickStat('Operating Weight', specs.operating_weight_lbs, 'lbs')}
+                </div>
 
-                        <h3 class="text-xl font-semibold mb-4 text-slate-300">Full Specifications</h3>
-                        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
-                                ${renderSpecRows(specs)}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="px-8 py-5 border-t border-slate-700 bg-slate-950 flex justify-end">
-                        <button onclick="this.closest('.fixed').remove()" class="px-6 py-2.5 rounded-2xl bg-slate-700 hover:bg-slate-600 text-sm font-medium">Close</button>
+                <h3 class="text-xl font-semibold mb-4 text-slate-300">Full Specifications</h3>
+                <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+                        ${renderSpecRows(specs)}
                     </div>
                 </div>
-            `;
-            document.body.appendChild(modal);
-        }
+            </div>
+
+            <div class="px-8 py-5 border-t border-slate-700 bg-slate-950 flex justify-end">
+                <button onclick="this.closest('.fixed').remove()" class="px-6 py-2.5 rounded-2xl bg-slate-700 hover:bg-slate-600 text-sm font-medium">Close</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
 
         function createQuickStat(label, value, unit) {
             if (!value) return '';
