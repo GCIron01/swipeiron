@@ -204,16 +204,19 @@
         }
 
         let weight = specs.operating_weight_lbs || 0;
-        let platformHeight = specs.platform_height_elevated_ft || specs.platform_height_ft || 0;
-        let capacity = specs.platform_capacity_lbs || specs.rated_capacity_lbs || 0;
-        let liftHeight = specs.max_lift_height_ft || 0;
+let platformHeight = specs.platform_height_elevated_ft || specs.platform_height_ft || 0;
+let capacity = specs.platform_capacity_lbs 
+    || specs.lift_capacity_lbs 
+    || specs.rated_capacity_lbs 
+    || 0;
+let liftHeight = specs.max_lift_height_ft || 0;
 
-        if (currentUnit === 'metric') {
-            weight = Math.round(weight * 0.4536);
-            platformHeight = platformHeight > 0 ? (platformHeight * 0.3048).toFixed(1) : 0;
-            capacity = Math.round(capacity * 0.4536);
-            liftHeight = liftHeight > 0 ? (liftHeight * 0.3048).toFixed(1) : 0;
-        }
+if (currentUnit === 'metric') {
+    weight = Math.round(weight * 0.4536);
+    platformHeight = platformHeight > 0 ? (platformHeight * 0.3048).toFixed(1) : 0;
+    capacity = Math.round(capacity * 0.4536);
+    liftHeight = liftHeight > 0 ? (liftHeight * 0.3048).toFixed(1) : 0;
+}
 
         const card = document.createElement('div');
         card.className = `equipment-card bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-3xl p-6 cursor-pointer`;
