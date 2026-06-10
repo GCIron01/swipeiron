@@ -189,14 +189,12 @@ function renderEquipmentCards() {
 
         const isRotating = subcategory.includes('Rotating');
         const isElectric = subcategory.toLowerCase().includes('electric');
-        const isHybrid = subcategory.toLowerCase().includes('hybrid');
+        const isForklift = subcategory.includes('Forklift');
 
-        // Power source badge - now consistent with Aerial & Construction
+        // Power source badge - consistent colors
         let powerBadge = '';
         if (isElectric) {
             powerBadge = `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-900 text-emerald-400 flex items-center gap-1"><i class="fa-solid fa-bolt"></i> Electric</span>`;
-        } else if (isHybrid) {
-            powerBadge = `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-purple-900 text-purple-400 flex items-center gap-1"><i class="fa-solid fa-sync"></i> Hybrid</span>`;
         } else {
             powerBadge = `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-amber-900 text-amber-400 flex items-center gap-1"><i class="fa-solid fa-gas-pump"></i> Engine</span>`;
         }
@@ -205,27 +203,60 @@ function renderEquipmentCards() {
             ? `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-violet-600 text-white flex items-center gap-1"><i class="fa-solid fa-sync fa-spin-pulse"></i> 360°</span>` 
             : '';
 
-        let weight = specs.operating_weight_lbs || 0;
-        let liftHeight = specs.max_lift_height_ft || 0;
-        let capacity = specs.rated_capacity_lbs || 0;
+        // Stats logic
+        let statsHTML = '';
 
-        if (currentUnit === 'metric') {
-            weight = Math.round(weight * 0.4536);
-            liftHeight = liftHeight > 0 ? (liftHeight * 0.3048).toFixed(1) : 0;
-            capacity = Math.round(capacity * 0.4536);
+        if (isForklift) {
+            // New Diesel Pneumatic Forklift stats
+            let capacity = specs.rated_capacity_lbs || 0;
+            let tireType = specs.tire_type || '—';
+            let power = model.power_source || '—';
+
+            if (currentUnit === 'metric') {
+                capacity = Math.round(capacity * 0.4536);
+            }
+
+            statsHTML = `
+                <div class="grid grid-cols-3 gap-4 text-center mt-6">
+                    <div>
+                        <div class="text-xs text-slate-500">Capacity</div>
+                        <div class="text-2xl font-bold text-[#f97316]">${capacity}</div>
+                        <div class="text-xs text-slate-500">${currentUnit === 'us' ? 'lbs' : 'kg'}</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-500">Tire Type</div>
+                        <div class="text-2xl font-bold text-[#f97316]">${tireType}</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-500">Power</div>
+                        <div class="text-2xl font-bold text-[#f97316]">${power}</div>
+                    </div>
+                </div>
+            `;
+        } else {
+            // Existing Telehandler logic
+            let weight = specs.operating_weight_lbs || 0;
+            let liftHeight = specs.max_lift_height_ft || 0;
+            let capacity = specs.rated_capacity_lbs || 0;
+
+            if (currentUnit === 'metric') {
+                weight = Math.round(weight * 0.4536);
+                liftHeight = liftHeight > 0 ? (liftHeight * 0.3048).toFixed(1) : 0;
+                capacity = Math.round(capacity * 0.4536);
+            }
+
+            statsHTML = `
+                <div class="grid grid-cols-3 gap-4 text-center mt-6">
+                    <div><div class="text-xs text-slate-500">Max Lift Height</div><div class="text-2xl font-bold text-[#f97316]">${liftHeight}</div></div>
+                    <div><div class="text-xs text-slate-500">Capacity</div><div class="text-2xl font-bold text-[#f97316]">${capacity}</div></div>
+                    <div><div class="text-xs text-slate-500">Weight</div><div class="text-2xl font-bold text-[#f97316]">${weight}</div></div>
+                </div>
+            `;
         }
 
         const card = document.createElement('div');
         card.className = `equipment-card bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-3xl p-6 cursor-pointer`;
         card.onclick = () => showModelDetail(model.id);
-
-        const statsHTML = `
-            <div class="grid grid-cols-3 gap-4 text-center mt-6">
-                <div><div class="text-xs text-slate-500">Max Lift Height</div><div class="text-2xl font-bold text-[#f97316]">${liftHeight}</div></div>
-                <div><div class="text-xs text-slate-500">Capacity</div><div class="text-2xl font-bold text-[#f97316]">${capacity}</div></div>
-                <div><div class="text-xs text-slate-500">Weight</div><div class="text-2xl font-bold text-[#f97316]">${weight}</div></div>
-            </div>
-        `;
 
         card.innerHTML = `
             <div class="flex justify-between items-start mb-4">
