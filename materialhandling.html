@@ -341,27 +341,34 @@ function showModelDetail(id) {
                     </div>
                 </div>
 
-                <!-- NEW: Dimensions -->
-                <h3 class="text-xl font-semibold mb-4 text-slate-300">Dimensions</h3>
-                <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6 mb-8">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div>
-                            <div class="text-xs text-slate-400">Overall Length</div>
-                            <div class="text-3xl font-bold text-[#f97316] mt-1">${overallLength}</div>
-                            <div class="text-xs text-slate-500">${dimUnit}</div>
-                        </div>
-                        <div>
-                            <div class="text-xs text-slate-400">Overall Width</div>
-                            <div class="text-3xl font-bold text-[#f97316] mt-1">${overallWidth}</div>
-                            <div class="text-xs text-slate-500">${dimUnit}</div>
-                        </div>
-                        <div>
-                            <div class="text-xs text-slate-400">Overall Height</div>
-                            <div class="text-3xl font-bold text-[#f97316] mt-1">${overallHeight}</div>
-                            <div class="text-xs text-slate-500">${dimUnit}</div>
-                        </div>
-                    </div>
-                </div>
+                <!-- Dimensions -->
+<h3 class="text-xl font-semibold mb-4 text-slate-300">Dimensions</h3>
+<div class="bg-slate-950 border border-slate-800 rounded-2xl p-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div>
+            <div class="text-xs text-slate-400">Overall Length <span class="text-orange-400">*</span></div>
+            <div class="text-3xl font-bold text-[#f97316] mt-1">${overallLength}</div>
+            <div class="text-xs text-slate-500">${dimUnit}</div>
+        </div>
+        <div>
+            <div class="text-xs text-slate-400">Overall Width</div>
+            <div class="text-3xl font-bold text-[#f97316] mt-1">${overallWidth}</div>
+            <div class="text-xs text-slate-500">${dimUnit}</div>
+        </div>
+        <div>
+            <div class="text-xs text-slate-400">Overall Height</div>
+            <div class="text-3xl font-bold text-[#f97316] mt-1">${overallHeight}</div>
+            <div class="text-xs text-slate-500">${dimUnit}</div>
+        </div>
+    </div>
+
+    <!-- Note -->
+    <div class="mt-4 pt-4 border-t border-slate-800">
+        <p class="text-xs text-slate-400">
+            <span class="text-orange-400">*</span> Overall Length does not include forks
+        </p>
+    </div>
+</div>
 
                 <!-- NEW: Standard Equipment -->
                 <h3 class="text-xl font-semibold mb-4 text-slate-300">Standard Equipment</h3>
