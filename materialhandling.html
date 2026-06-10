@@ -178,8 +178,8 @@
             document.getElementById('results-count').innerHTML = `${filteredData.length} machines shown`;
         }
 
-        // ==================== RENDER CARDS ====================
-        function renderEquipmentCards() {
+        // ==================== UPDATED RENDER CARDS ====================
+function renderEquipmentCards() {
     const container = document.getElementById('equipment-grid');
     container.innerHTML = '';
 
@@ -191,18 +191,16 @@
         const isElectric = subcategory.toLowerCase().includes('electric');
         const isHybrid = subcategory.toLowerCase().includes('hybrid');
 
-        // Power source badge
+        // Power source badge - now consistent with Aerial & Construction
         let powerBadge = '';
         if (isElectric) {
-            powerBadge = `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-900 text-blue-400 flex items-center gap-1"><i class="fa-solid fa-bolt"></i> Electric</span>`;
+            powerBadge = `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-900 text-emerald-400 flex items-center gap-1"><i class="fa-solid fa-bolt"></i> Electric</span>`;
         } else if (isHybrid) {
             powerBadge = `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-purple-900 text-purple-400 flex items-center gap-1"><i class="fa-solid fa-sync"></i> Hybrid</span>`;
         } else {
-            // Default for Telehandlers
             powerBadge = `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-amber-900 text-amber-400 flex items-center gap-1"><i class="fa-solid fa-gas-pump"></i> Engine</span>`;
         }
 
-        // 360° badge for Rotating Telehandlers
         const rotatingBadge = isRotating 
             ? `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-violet-600 text-white flex items-center gap-1"><i class="fa-solid fa-sync fa-spin-pulse"></i> 360°</span>` 
             : '';
