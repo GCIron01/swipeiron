@@ -309,7 +309,7 @@ function showModelDetail(id) {
     const isElectric = subcategory.toLowerCase().includes('electric');
     const isForklift = subcategory.includes('Forklift');
 
-    // Power source badge - consistent with cards
+    // Power source badge
     let powerBadge = '';
     if (isElectric) {
         powerBadge = `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-900 text-emerald-400 flex items-center gap-1"><i class="fa-solid fa-bolt"></i> Electric</span>`;
@@ -317,14 +317,14 @@ function showModelDetail(id) {
         powerBadge = `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-amber-900 text-amber-400 flex items-center gap-1"><i class="fa-solid fa-gas-pump"></i> Engine</span>`;
     }
 
-    // 360° badge
     const rotatingBadge = isRotating 
         ? `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-violet-600 text-white flex items-center gap-1"><i class="fa-solid fa-sync fa-spin-pulse"></i> 360°</span>` 
         : '';
 
     const modal = document.createElement('div');
     modal.className = 'fixed inset-0 bg-black/70 flex items-center justify-center z-[100] p-4';
-    modal.innerHTML = `
+
+    let html = `
         <div class="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-4xl max-h-[92vh] overflow-hidden flex flex-col">
             
             <!-- Header -->
@@ -357,60 +357,74 @@ function showModelDetail(id) {
                         ${renderSpecRows(specs)}
                     </div>
                 </div>
+    `;
 
-                <!-- Dimensions -->
-                <h3 class="text-xl font-semibold mb-4 text-slate-300">Dimensions</h3>
-                <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6 mb-8">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div>
-                            <div class="text-xs text-slate-400">Overall Length <span class="text-orange-400">*</span></div>
-                            <div class="text-3xl font-bold text-[#f97316] mt-1">${model.dimensions?.overall_length_in || 0}</div>
-                            <div class="text-xs text-slate-500">in</div>
-                        </div>
-                        <div>
-                            <div class="text-xs text-slate-400">Overall Width</div>
-                            <div class="text-3xl font-bold text-[#f97316] mt-1">${model.dimensions?.overall_width_in || 0}</div>
-                            <div class="text-xs text-slate-500">in</div>
-                        </div>
-                        <div>
-                            <div class="text-xs text-slate-400">Overall Height</div>
-                            <div class="text-3xl font-bold text-[#f97316] mt-1">${model.dimensions?.overall_height_in || 0}</div>
-                            <div class="text-xs text-slate-500">in</div>
-                        </div>
+    // Only show Dimensions if data exists
+    if (model.dimensions && (model.dimensions.overall_length_in || model.dimensions.overall_width_in || model.dimensions.overall_height_in)) {
+        html += `
+            <h3 class="text-xl font-semibold mb-4 text-slate-300">Dimensions</h3>
+            <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <div class="text-xs text-slate-400">Overall Length <span class="text-orange-400">*</span></div>
+                        <div class="text-3xl font-bold text-[#f97316] mt-1">${model.dimensions.overall_length_in || '—'}</div>
+                        <div class="text-xs text-slate-500">in</div>
                     </div>
-                    <div class="mt-4 pt-4 border-t border-slate-800">
-                        <p class="text-xs text-slate-400">
-                            <span class="text-orange-400">*</span> Overall Length does not include forks
-                        </p>
+                    <div>
+                        <div class="text-xs text-slate-400">Overall Width</div>
+                        <div class="text-3xl font-bold text-[#f97316] mt-1">${model.dimensions.overall_width_in || '—'}</div>
+                        <div class="text-xs text-slate-500">in</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-400">Overall Height</div>
+                        <div class="text-3xl font-bold text-[#f97316] mt-1">${model.dimensions.overall_height_in || '—'}</div>
+                        <div class="text-xs text-slate-500">in</div>
                     </div>
                 </div>
-
-                <!-- Standard Equipment -->
-                <h3 class="text-xl font-semibold mb-4 text-slate-300">Standard Equipment</h3>
-                <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6 mb-8">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm">
-                        ${(model.standard_equipment || []).map(item => `
-                            <div class="flex items-start gap-2 py-1">
-                                <i class="fa-solid fa-check text-emerald-400 mt-1"></i>
-                                <span>${item}</span>
-                            </div>
-                        `).join('')}
-                    </div>
+                <div class="mt-4 pt-4 border-t border-slate-800">
+                    <p class="text-xs text-slate-400">
+                        <span class="text-orange-400">*</span> Overall Length does not include forks
+                    </p>
                 </div>
+            </div>
+        `;
+    }
 
-                <!-- Options & Accessories -->
-                <h3 class="text-xl font-semibold mb-4 text-slate-300">Options & Accessories</h3>
-                <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm">
-                        ${(model.options_accessories || []).map(item => `
-                            <div class="flex items-start gap-2 py-1">
-                                <i class="fa-solid fa-plus text-orange-400 mt-1"></i>
-                                <span>${item}</span>
-                            </div>
-                        `).join('')}
-                    </div>
+    // Only show Standard Equipment if data exists
+    if (model.standard_equipment && model.standard_equipment.length > 0) {
+        html += `
+            <h3 class="text-xl font-semibold mb-4 text-slate-300">Standard Equipment</h3>
+            <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm">
+                    ${model.standard_equipment.map(item => `
+                        <div class="flex items-start gap-2 py-1">
+                            <i class="fa-solid fa-check text-emerald-400 mt-1"></i>
+                            <span>${item}</span>
+                        </div>
+                    `).join('')}
                 </div>
+            </div>
+        `;
+    }
 
+    // Only show Options if data exists
+    if (model.options_accessories && model.options_accessories.length > 0) {
+        html += `
+            <h3 class="text-xl font-semibold mb-4 text-slate-300">Options & Accessories</h3>
+            <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm">
+                    ${model.options_accessories.map(item => `
+                        <div class="flex items-start gap-2 py-1">
+                            <i class="fa-solid fa-plus text-orange-400 mt-1"></i>
+                            <span>${item}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    html += `
             </div>
 
             <div class="px-8 py-5 border-t border-slate-700 bg-slate-950 flex justify-end">
@@ -418,6 +432,8 @@ function showModelDetail(id) {
             </div>
         </div>
     `;
+
+    modal.innerHTML = html;
     document.body.appendChild(modal);
 }
 
