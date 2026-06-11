@@ -447,26 +447,51 @@ function createTelehandlerQuickStats(specs) {
 }
 
 // Helper function for Forklift quick stats
-function createForkliftQuickStats(specs, powerSource) {
-    let capacity = specs.rated_capacity_lbs || 0;
-    let tireType = specs.tire_type || '—';
-    let power = powerSource || '—';
+function createQuickStatsHTML(model, specs) {
+    const subcategory = model.subcategory || '';
+    const isForklift = subcategory.includes('Forklift');
 
-    return `
-        <div class="bg-slate-800 rounded-2xl p-4">
-            <div class="text-xs text-slate-400">Capacity</div>
-            <div class="text-3xl font-bold text-[#f97316] mt-1">${Number(capacity).toLocaleString()}</div>
-            <div class="text-xs text-slate-500">lbs</div>
-        </div>
-        <div class="bg-slate-800 rounded-2xl p-4">
-            <div class="text-xs text-slate-400">Tire Type</div>
-            <div class="text-3xl font-bold text-[#f97316] mt-1">${tireType}</div>
-        </div>
-        <div class="bg-slate-800 rounded-2xl p-4">
-            <div class="text-xs text-slate-400">Power</div>
-            <div class="text-3xl font-bold text-[#f97316] mt-1">${power}</div>
-        </div>
-    `;
+    if (isForklift) {
+        // Forklift quick stats
+        const capacity = specs.rated_capacity_lbs || 0;
+        const tireType = specs.tire_type || '—';
+        const power = model.power_source || '—';
+
+        return `
+            <div class="bg-slate-800 rounded-2xl p-4">
+                <div class="text-xs text-slate-400">Capacity</div>
+                <div class="text-3xl font-bold text-[#f97316] mt-1">${Number(capacity).toLocaleString()}</div>
+                <div class="text-xs text-slate-500">lbs</div>
+            </div>
+            <div class="bg-slate-800 rounded-2xl p-4">
+                <div class="text-xs text-slate-400">Tire Type</div>
+                <div class="text-3xl font-bold text-[#f97316] mt-1">${tireType}</div>
+            </div>
+            <div class="bg-slate-800 rounded-2xl p-4">
+                <div class="text-xs text-slate-400">Power</div>
+                <div class="text-3xl font-bold text-[#f97316] mt-1">${power}</div>
+            </div>
+        `;
+    } else {
+        // Telehandler / Rotating Telehandler quick stats
+        return `
+            <div class="bg-slate-800 rounded-2xl p-4">
+                <div class="text-xs text-slate-400">Max Lift Height</div>
+                <div class="text-3xl font-bold text-[#f97316] mt-1">${specs.max_lift_height_ft || '—'}</div>
+                <div class="text-xs text-slate-500">ft</div>
+            </div>
+            <div class="bg-slate-800 rounded-2xl p-4">
+                <div class="text-xs text-slate-400">Capacity</div>
+                <div class="text-3xl font-bold text-[#f97316] mt-1">${specs.rated_capacity_lbs || '—'}</div>
+                <div class="text-xs text-slate-500">lbs</div>
+            </div>
+            <div class="bg-slate-800 rounded-2xl p-4">
+                <div class="text-xs text-slate-400">Operating Weight</div>
+                <div class="text-3xl font-bold text-[#f97316] mt-1">${specs.operating_weight_lbs || '—'}</div>
+                <div class="text-xs text-slate-500">lbs</div>
+            </div>
+        `;
+    }
 }
 
         function renderSpecRows(specs) {
