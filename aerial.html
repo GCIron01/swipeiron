@@ -96,7 +96,7 @@
     let filteredData = [];
     let currentFilter = null;
     let currentUnit = 'us';
-    let currentOpenModelId = null;   // NEW: Track currently open modal
+    let currentOpenModelId = null;
 
     async function loadAerialEquipment() {
         const grid = document.getElementById('equipment-grid');
@@ -192,11 +192,10 @@
             const isElectric = subcategory.toLowerCase().includes('electric');
             const isEngine = subcategory.toLowerCase().includes('engine');
             const isHybrid = subcategory.toLowerCase().includes('hybrid');
-            const isTelehandler = subcategory.includes('Telehandler');
 
             let powerBadge = '';
             if (isElectric) {
-                powerBadge = `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-900 text-emerald-400 flex items-center gap-1"><i class="fa-solid fa-bolt""></i> Electric</span>`;
+                powerBadge = `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-900 text-emerald-400 flex items-center gap-1"><i class="fa-solid fa-bolt"></i> Electric</span>`;
             } else if (isHybrid) {
                 powerBadge = `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-purple-900 text-purple-400 flex items-center gap-1"><i class="fa-solid fa-sync"></i> Hybrid</span>`;
             } else if (isEngine) {
@@ -269,164 +268,174 @@
 
         renderEquipmentCards();
 
-        // Refresh modal if it's currently open
         if (currentOpenModelId !== null) {
             showModelDetail(currentOpenModelId);
         }
     }
 
-    // ==================== FULL UPDATED showModelDetail ====================
-function showModelDetail(id) {
-    const model = equipmentDatabase.find(m => m.id === id);
-    if (!model) return;
+    // ==================== FIXED showModelDetail ====================
+    function showModelDetail(id) {
+        const model = equipmentDatabase.find(m => m.id === id);
+        if (!model) return;
 
-    currentOpenModelId = id;
+        currentOpenModelId = id;
 
-    const specs = model.specs || {};
-    const container = document.getElementById('page-content');
+        const specs = model.specs || {};
+        const subcategory = model.subcategory || '';
 
-    // ==================== QUICK STATS ====================
-    let height = specs.platform_height_elevated_ft || specs.platform_height_ft || 0;
-    let capacity = specs.platform_capacity_lbs || specs.lift_capacity_lbs || specs.rated_capacity_lbs || 0;
-    let weight = specs.operating_weight_lbs || 0;
+        const container = document.getElementById('page-content');
 
-    // ==================== DIMENSIONS (from new dimensions column) ====================
-    let overallLength = model.dimensions?.overall_length_in || 0;
-    let overallWidth  = model.dimensions?.overall_width_in  || 0;
-    let overallHeight = model.dimensions?.overall_height_in || 0;
+        // === Determine Power Type (FIXED) ===
+        const isElectric = subcategory.toLowerCase().includes('electric');
+        const isEngine = subcategory.toLowerCase().includes('engine');
+        const isHybrid = subcategory.toLowerCase().includes('hybrid');
 
-    let dimUnit = currentUnit === 'us' ? 'in' : 'cm';
+        let powerBadge = '';
+        if (isElectric) {
+            powerBadge = `<span class="px-4 py-1.5 rounded-full text-sm font-semibold bg-emerald-900 text-emerald-400 flex items-center gap-2"><i class="fa-solid fa-bolt"></i> Electric</span>`;
+        } else if (isHybrid) {
+            powerBadge = `<span class="px-4 py-1.5 rounded-full text-sm font-semibold bg-purple-900 text-purple-400 flex items-center gap-2"><i class="fa-solid fa-sync"></i> Hybrid</span>`;
+        } else if (isEngine) {
+            powerBadge = `<span class="px-4 py-1.5 rounded-full text-sm font-semibold bg-amber-900 text-amber-400 flex items-center gap-2"><i class="fa-solid fa-gas-pump"></i> Engine</span>`;
+        }
 
-    if (currentUnit === 'metric') {
-        overallLength = overallLength > 0 ? Math.round(overallLength * 2.54) : 0;
-        overallWidth  = overallWidth  > 0 ? Math.round(overallWidth  * 2.54) : 0;
-        overallHeight = overallHeight > 0 ? Math.round(overallHeight * 2.54) : 0;
-    }
+        // Quick Stats
+        let height = specs.platform_height_elevated_ft || specs.platform_height_ft || 0;
+        let capacity = specs.platform_capacity_lbs || specs.lift_capacity_lbs || specs.rated_capacity_lbs || 0;
+        let weight = specs.operating_weight_lbs || 0;
 
-    // Unit conversion for quick stats
-    if (currentUnit === 'metric') {
-        height = height > 0 ? (height * 0.3048).toFixed(1) : 0;
-        capacity = capacity > 0 ? Math.round(capacity * 0.4536) : 0;
-        weight = weight > 0 ? Math.round(weight * 0.4536) : 0;
-    }
+        if (currentUnit === 'metric') {
+            height = height > 0 ? (height * 0.3048).toFixed(1) : 0;
+            capacity = capacity > 0 ? Math.round(capacity * 0.4536) : 0;
+            weight = weight > 0 ? Math.round(weight * 0.4536) : 0;
+        }
 
-    const hUnit = currentUnit === 'us' ? 'ft' : 'm';
-    const cUnit = currentUnit === 'us' ? 'lbs' : 'kg';
-    const wUnit = currentUnit === 'us' ? 'lbs' : 'kg';
+        const hUnit = currentUnit === 'us' ? 'ft' : 'm';
+        const cUnit = currentUnit === 'us' ? 'lbs' : 'kg';
+        const wUnit = currentUnit === 'us' ? 'lbs' : 'kg';
 
-    let html = `
-        <div class="max-w-5xl mx-auto">
-            <button onclick="location.reload()" 
-                    class="mb-6 flex items-center gap-2 text-slate-400 hover:text-white transition-colors">
-                <i class="fa-solid fa-arrow-left"></i> 
-                <span>Back to Aerial</span>
-            </button>
+        // Dimensions
+        let overallLength = model.dimensions?.overall_length_in || 0;
+        let overallWidth  = model.dimensions?.overall_width_in  || 0;
+        let overallHeight = model.dimensions?.overall_height_in || 0;
 
-            <div class="bg-slate-900 rounded-3xl p-8">
-                
-                <!-- Header -->
-                <div class="flex justify-between items-start mb-8">
-                    <div>
-                        <div class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-900 text-emerald-400 mb-3">
-                            ${model.subcategory || 'Electric Powered Scissor Lift'}
+        let dimUnit = currentUnit === 'us' ? 'in' : 'cm';
+        if (currentUnit === 'metric') {
+            overallLength = overallLength > 0 ? Math.round(overallLength * 2.54) : 0;
+            overallWidth  = overallWidth  > 0 ? Math.round(overallWidth  * 2.54) : 0;
+            overallHeight = overallHeight > 0 ? Math.round(overallHeight * 2.54) : 0;
+        }
+
+        let html = `
+            <div class="max-w-5xl mx-auto">
+                <button onclick="location.reload()" 
+                        class="mb-6 flex items-center gap-2 text-slate-400 hover:text-white transition-colors">
+                    <i class="fa-solid fa-arrow-left"></i> 
+                    <span>Back to Aerial</span>
+                </button>
+
+                <div class="bg-slate-900 rounded-3xl p-8">
+                    
+                    <!-- Header -->
+                    <div class="flex justify-between items-start mb-8">
+                        <div>
+                            <div class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-700 text-slate-200 mb-3">
+                                ${subcategory}
+                            </div>
+                            <h1 class="text-5xl font-bold tracking-tight">${model.brand} ${model.model}</h1>
                         </div>
-                        <h1 class="text-5xl font-bold tracking-tight">${model.brand} ${model.model}</h1>
+                        ${powerBadge}
                     </div>
-                    <div class="px-4 py-1.5 rounded-full text-sm font-semibold bg-emerald-900 text-emerald-400 flex items-center gap-2">
-                        <i class="fa-solid fa-bolt"></i>
-                        <span>Electric</span>
-                    </div>
-                </div>
 
-                <!-- Quick Stats -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
-                    <div class="bg-slate-800 rounded-2xl p-6">
-                        <div class="text-xs text-slate-400 mb-1">Platform Height</div>
-                        <div class="text-5xl font-bold text-[#f97316]">${height}</div>
-                        <div class="text-sm text-slate-400 mt-1">${hUnit}</div>
+                    <!-- Quick Stats -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+                        <div class="bg-slate-800 rounded-2xl p-6">
+                            <div class="text-xs text-slate-400 mb-1">Platform Height</div>
+                            <div class="text-5xl font-bold text-[#f97316]">${height}</div>
+                            <div class="text-sm text-slate-400 mt-1">${hUnit}</div>
+                        </div>
+                        <div class="bg-slate-800 rounded-2xl p-6">
+                            <div class="text-xs text-slate-400 mb-1">Capacity</div>
+                            <div class="text-5xl font-bold text-[#f97316]">${capacity.toLocaleString()}</div>
+                            <div class="text-sm text-slate-400 mt-1">${cUnit}</div>
+                        </div>
+                        <div class="bg-slate-800 rounded-2xl p-6">
+                            <div class="text-xs text-slate-400 mb-1">Operating Weight</div>
+                            <div class="text-5xl font-bold text-[#f97316]">${weight.toLocaleString()}</div>
+                            <div class="text-sm text-slate-400 mt-1">${wUnit}</div>
+                        </div>
                     </div>
-                    <div class="bg-slate-800 rounded-2xl p-6">
-                        <div class="text-xs text-slate-400 mb-1">Capacity</div>
-                        <div class="text-5xl font-bold text-[#f97316]">${capacity.toLocaleString()}</div>
-                        <div class="text-sm text-slate-400 mt-1">${cUnit}</div>
-                    </div>
-                    <div class="bg-slate-800 rounded-2xl p-6">
-                        <div class="text-xs text-slate-400 mb-1">Operating Weight</div>
-                        <div class="text-5xl font-bold text-[#f97316]">${weight.toLocaleString()}</div>
-                        <div class="text-sm text-slate-400 mt-1">${wUnit}</div>
-                    </div>
-                </div>
 
-                <!-- Full Specifications -->
-                <h3 class="text-xl font-semibold mb-4">Full Specifications</h3>
-                <div class="bg-slate-800 rounded-2xl p-6 mb-10">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
-                        ${Object.entries(specs).map(([key, value]) => {
-                            if (key === 'notes') return '';
-                            const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                            return `
-                                <div class="flex justify-between border-b border-slate-700 pb-2">
-                                    <span class="text-slate-400">${label}</span>
-                                    <span class="font-medium text-white">${value}</span>
+                    <!-- Full Specifications -->
+                    <h3 class="text-xl font-semibold mb-4">Full Specifications</h3>
+                    <div class="bg-slate-800 rounded-2xl p-6 mb-10">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+                            ${Object.entries(specs).map(([key, value]) => {
+                                if (key === 'notes') return '';
+                                const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                                return `
+                                    <div class="flex justify-between border-b border-slate-700 pb-2">
+                                        <span class="text-slate-400">${label}</span>
+                                        <span class="font-medium text-white">${value}</span>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Dimensions -->
+                    <h3 class="text-xl font-semibold mb-4">Dimensions</h3>
+                    <div class="bg-slate-800 rounded-2xl p-6 mb-10">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <div class="text-xs text-slate-400">Overall Length</div>
+                                <div class="text-2xl font-bold text-[#f97316]">${overallLength}</div>
+                                <div class="text-sm text-slate-400">${dimUnit}</div>
+                            </div>
+                            <div>
+                                <div class="text-xs text-slate-400">Overall Width</div>
+                                <div class="text-2xl font-bold text-[#f97316]">${overallWidth}</div>
+                                <div class="text-sm text-slate-400">${dimUnit}</div>
+                            </div>
+                            <div>
+                                <div class="text-xs text-slate-400">Overall Height</div>
+                                <div class="text-2xl font-bold text-[#f97316]">${overallHeight}</div>
+                                <div class="text-sm text-slate-400">${dimUnit}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Standard Equipment -->
+                    <h3 class="text-xl font-semibold mb-4">Standard Equipment</h3>
+                    <div class="bg-slate-800 rounded-2xl p-6 mb-10">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm">
+                            ${(model.standard_equipment || []).map(item => `
+                                <div class="flex items-start gap-2 py-1">
+                                    <i class="fa-solid fa-check text-emerald-400 mt-1"></i>
+                                    <span>${item}</span>
                                 </div>
-                            `;
-                        }).join('')}
-                    </div>
-                </div>
-
-                <!-- Dimensions (from dimensions JSONB column) -->
-                <h3 class="text-xl font-semibold mb-4">Dimensions</h3>
-                <div class="bg-slate-800 rounded-2xl p-6 mb-10">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <div class="text-xs text-slate-400">Overall Length</div>
-                            <div class="text-2xl font-bold text-[#f97316]">${overallLength}</div>
-                            <div class="text-sm text-slate-400">${dimUnit}</div>
-                        </div>
-                        <div>
-                            <div class="text-xs text-slate-400">Overall Width</div>
-                            <div class="text-2xl font-bold text-[#f97316]">${overallWidth}</div>
-                            <div class="text-sm text-slate-400">${dimUnit}</div>
-                        </div>
-                        <div>
-                            <div class="text-xs text-slate-400">Overall Height</div>
-                            <div class="text-2xl font-bold text-[#f97316]">${overallHeight}</div>
-                            <div class="text-sm text-slate-400">${dimUnit}</div>
+                            `).join('')}
                         </div>
                     </div>
-                </div>
 
-                <!-- Standard Equipment -->
-                <h3 class="text-xl font-semibold mb-4">Standard Equipment</h3>
-                <div class="bg-slate-800 rounded-2xl p-6 mb-10">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm">
-                        ${(model.standard_equipment || []).map(item => `
-                            <div class="flex items-start gap-2 py-1">
-                                <i class="fa-solid fa-check text-emerald-400 mt-1"></i>
-                                <span>${item}</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-
-                <!-- Options & Accessories -->
-                <h3 class="text-xl font-semibold mb-4">Options & Accessories</h3>
-                <div class="bg-slate-800 rounded-2xl p-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm">
-                        ${(model.options_accessories || []).map(item => `
-                            <div class="flex items-start gap-2 py-1">
-                                <i class="fa-solid fa-plus text-orange-400 mt-1"></i>
-                                <span>${item}</span>
-                            </div>
-                        `).join('')}
+                    <!-- Options & Accessories -->
+                    <h3 class="text-xl font-semibold mb-4">Options & Accessories</h3>
+                    <div class="bg-slate-800 rounded-2xl p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm">
+                            ${(model.options_accessories || []).map(item => `
+                                <div class="flex items-start gap-2 py-1">
+                                    <i class="fa-solid fa-plus text-orange-400 mt-1"></i>
+                                    <span>${item}</span>
+                                </div>
+                            `).join('')}
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    `;
+        `;
 
-    container.innerHTML = html;
-}
+        container.innerHTML = html;
+    }
 
     async function init() {
         document.getElementById('btn-us').classList.add('bg-slate-700', 'text-white');
