@@ -129,7 +129,6 @@
 
             const subcategories = [...new Set(equipmentDatabase.map(m => m.subcategory).filter(Boolean))];
 
-            // All button
             const allBtn = document.createElement('button');
             allBtn.className = `filter-btn px-4 py-2 rounded-full text-sm border border-slate-700 hover:bg-slate-800 active bg-[#f97316] text-white border-[#f97316]`;
             allBtn.textContent = 'All Construction';
@@ -179,7 +178,7 @@
             document.getElementById('results-count').innerHTML = `${filteredData.length} machines shown`;
         }
 
-        // ==================== RENDER CARDS ====================
+        // ==================== RENDER CARDS (FIXED) ====================
         function renderEquipmentCards() {
             const container = document.getElementById('equipment-grid');
             container.innerHTML = '';
@@ -187,6 +186,22 @@
             filteredData.forEach(model => {
                 const specs = model.specs || {};
                 const subcategory = model.subcategory || '';
+
+                // === DYNAMIC POWER BADGE ===
+                let powerBadge = '';
+                if (subcategory.toLowerCase().includes('electric')) {
+                    powerBadge = `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-900 text-emerald-400 flex items-center gap-1">
+                        <i class="fa-solid fa-bolt"></i> Electric
+                    </span>`;
+                } else if (subcategory.toLowerCase().includes('hybrid')) {
+                    powerBadge = `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-purple-900 text-purple-400 flex items-center gap-1">
+                        <i class="fa-solid fa-sync"></i> Hybrid
+                    </span>`;
+                } else {
+                    powerBadge = `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-amber-900 text-amber-400 flex items-center gap-1">
+                        <i class="fa-solid fa-gas-pump"></i> Diesel
+                    </span>`;
+                }
 
                 const isMiniExcavator = subcategory.includes('Mini Excavator');
                 const isSkidOrCTL = subcategory.includes('Skid Steer') || subcategory.includes('Compact Track');
@@ -239,9 +254,7 @@
                         <div>
                             <div class="flex items-center gap-2 mb-2">
                                 <span class="px-3 py-1 rounded-full text-xs font-semibold bg-slate-700 text-slate-200">${subcategory}</span>
-                                <span class="px-3 py-1 rounded-full text-xs font-semibold bg-amber-900 text-amber-400 flex items-center gap-1">
-                                    <i class="fa-solid fa-gas-pump"></i> Diesel
-                                </span>
+                                ${powerBadge}
                             </div>
                             <div class="font-bold text-xl">${model.brand} ${model.model}</div>
                         </div>
@@ -275,137 +288,150 @@
         }
 
         // ==================== UPDATED showModelDetail ====================
-function showModelDetail(id) {
-    const model = equipmentDatabase.find(m => m.id === id);
-    if (!model) return;
+        function showModelDetail(id) {
+            const model = equipmentDatabase.find(m => m.id === id);
+            if (!model) return;
 
-    const specs = model.specs || {};
-    const subcategory = model.subcategory || '';
+            const specs = model.specs || {};
+            const subcategory = model.subcategory || '';
 
-    const isMiniExcavator = subcategory.includes('Mini Excavator');
-    const isSkidOrCTL = subcategory.includes('Skid Steer') || subcategory.includes('Compact Track');
+            // === DYNAMIC POWER BADGE FOR MODAL ===
+            let powerBadge = '';
+            if (subcategory.toLowerCase().includes('electric')) {
+                powerBadge = `<span class="px-4 py-1.5 rounded-full text-sm font-semibold bg-emerald-900 text-emerald-400 flex items-center gap-2">
+                    <i class="fa-solid fa-bolt"></i> Electric
+                </span>`;
+            } else if (subcategory.toLowerCase().includes('hybrid')) {
+                powerBadge = `<span class="px-4 py-1.5 rounded-full text-sm font-semibold bg-purple-900 text-purple-400 flex items-center gap-2">
+                    <i class="fa-solid fa-sync"></i> Hybrid
+                </span>`;
+            } else {
+                powerBadge = `<span class="px-4 py-1.5 rounded-full text-sm font-semibold bg-amber-900 text-amber-400 flex items-center gap-2">
+                    <i class="fa-solid fa-gas-pump"></i> Diesel
+                </span>`;
+            }
 
-    const hpValue = specs.net_hp || specs.gross_hp || null;
-    const hpLabel = specs.net_hp ? 'Net Power' : (specs.gross_hp ? 'Gross Power' : 'Horsepower');
+            const isMiniExcavator = subcategory.includes('Mini Excavator');
+            const isSkidOrCTL = subcategory.includes('Skid Steer') || subcategory.includes('Compact Track');
 
-    let quickStatsHTML = '';
+            const hpValue = specs.net_hp || specs.gross_hp || null;
+            const hpLabel = specs.net_hp ? 'Net Power' : (specs.gross_hp ? 'Gross Power' : 'Horsepower');
 
-    if (isMiniExcavator) {
-        quickStatsHTML = `
-            ${createQuickStat('Operating Weight', specs.operating_weight_lbs, 'lbs')}
-            ${createQuickStat('Max Dig Depth', specs.max_dig_depth_ft, 'ft')}
-            ${createQuickStat(hpLabel, hpValue, 'hp')}
-        `;
-    } else if (isSkidOrCTL) {
-        quickStatsHTML = `
-            ${createQuickStat('Operating Weight', specs.operating_weight_lbs, 'lbs')}
-            ${createQuickStat('Operating Capacity', specs.rated_operating_capacity_lbs || specs.rated_operating_capacity_35_lbs, 'lbs')}
-            ${createQuickStat(hpLabel, hpValue, 'hp')}
-        `;
-    } else {
-        quickStatsHTML = `
-            ${createQuickStat('Operating Weight', specs.operating_weight_lbs, 'lbs')}
-            ${createQuickStat(hpLabel, hpValue, 'hp')}
-            ${createQuickStat('Capacity', specs.rated_operating_capacity_lbs, 'lbs')}
-        `;
-    }
+            let quickStatsHTML = '';
 
-    // === NEW: Dimensions from dimensions column ===
-    const overallLength = model.dimensions?.overall_length_in || 0;
-    const overallWidth = model.dimensions?.overall_width_in || 0;
-    const overallHeight = model.dimensions?.overall_height_in || 0;
+            if (isMiniExcavator) {
+                quickStatsHTML = `
+                    ${createQuickStat('Operating Weight', specs.operating_weight_lbs, 'lbs')}
+                    ${createQuickStat('Max Dig Depth', specs.max_dig_depth_ft, 'ft')}
+                    ${createQuickStat(hpLabel, hpValue, 'hp')}
+                `;
+            } else if (isSkidOrCTL) {
+                quickStatsHTML = `
+                    ${createQuickStat('Operating Weight', specs.operating_weight_lbs, 'lbs')}
+                    ${createQuickStat('Operating Capacity', specs.rated_operating_capacity_lbs || specs.rated_operating_capacity_35_lbs, 'lbs')}
+                    ${createQuickStat(hpLabel, hpValue, 'hp')}
+                `;
+            } else {
+                quickStatsHTML = `
+                    ${createQuickStat('Operating Weight', specs.operating_weight_lbs, 'lbs')}
+                    ${createQuickStat(hpLabel, hpValue, 'hp')}
+                    ${createQuickStat('Capacity', specs.rated_operating_capacity_lbs, 'lbs')}
+                `;
+            }
 
-    const modal = document.createElement('div');
-    modal.className = 'fixed inset-0 bg-black/70 flex items-center justify-center z-[100] p-4';
-    modal.innerHTML = `
-        <div class="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-4xl max-h-[92vh] overflow-hidden flex flex-col">
-            
-            <!-- Header -->
-            <div class="flex items-center justify-between px-8 py-6 border-b border-slate-700">
-                <div>
-                    <div class="flex items-center gap-3">
-                        <span class="px-4 py-1.5 rounded-full text-sm font-semibold bg-slate-700 text-slate-200">${subcategory}</span>
-                        <span class="px-4 py-1.5 rounded-full text-sm font-semibold bg-amber-900 text-amber-400 flex items-center gap-2">
-                            <i class="fa-solid fa-gas-pump"></i> Diesel
-                        </span>
-                    </div>
-                    <h2 class="text-4xl font-bold mt-3">${model.brand} ${model.model}</h2>
-                </div>
-                <button onclick="this.closest('.fixed').remove()" class="text-slate-400 hover:text-white text-3xl leading-none">&times;</button>
-            </div>
+            const overallLength = model.dimensions?.overall_length_in || 0;
+            const overallWidth = model.dimensions?.overall_width_in || 0;
+            const overallHeight = model.dimensions?.overall_height_in || 0;
 
-            <div class="p-8 overflow-y-auto flex-1">
-                
-                <!-- Quick Stats -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                    ${quickStatsHTML}
-                </div>
-
-                <!-- Full Specifications -->
-                <h3 class="text-xl font-semibold mb-4 text-slate-300">Full Specifications</h3>
-                <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6 mb-8">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
-                        ${renderSpecRows(specs)}
-                    </div>
-                </div>
-
-                <!-- NEW: Dimensions -->
-                <h3 class="text-xl font-semibold mb-4 text-slate-300">Dimensions</h3>
-                <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6 mb-8">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black/70 flex items-center justify-center z-[100] p-4';
+            modal.innerHTML = `
+                <div class="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-4xl max-h-[92vh] overflow-hidden flex flex-col">
+                    
+                    <!-- Header -->
+                    <div class="flex items-center justify-between px-8 py-6 border-b border-slate-700">
                         <div>
-                            <div class="text-xs text-slate-400">Overall Length</div>
-                            <div class="text-3xl font-bold text-[#f97316] mt-1">${overallLength}</div>
-                            <div class="text-xs text-slate-500">in</div>
-                        </div>
-                        <div>
-                            <div class="text-xs text-slate-400">Overall Width</div>
-                            <div class="text-3xl font-bold text-[#f97316] mt-1">${overallWidth}</div>
-                            <div class="text-xs text-slate-500">in</div>
-                        </div>
-                        <div>
-                            <div class="text-xs text-slate-400">Overall Height</div>
-                            <div class="text-3xl font-bold text-[#f97316] mt-1">${overallHeight}</div>
-                            <div class="text-xs text-slate-500">in</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- NEW: Standard Equipment -->
-                <h3 class="text-xl font-semibold mb-4 text-slate-300">Standard Equipment</h3>
-                <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6 mb-8">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm">
-                        ${(model.standard_equipment || []).map(item => `
-                            <div class="flex items-start gap-2 py-1">
-                                <i class="fa-solid fa-check text-emerald-400 mt-1"></i>
-                                <span>${item}</span>
+                            <div class="flex items-center gap-3">
+                                <span class="px-4 py-1.5 rounded-full text-sm font-semibold bg-slate-700 text-slate-200">${subcategory}</span>
+                                ${powerBadge}
                             </div>
-                        `).join('')}
+                            <h2 class="text-4xl font-bold mt-3">${model.brand} ${model.model}</h2>
+                        </div>
+                        <button onclick="this.closest('.fixed').remove()" class="text-slate-400 hover:text-white text-3xl leading-none">&times;</button>
                     </div>
-                </div>
 
-                <!-- NEW: Options & Accessories -->
-                <h3 class="text-xl font-semibold mb-4 text-slate-300">Options & Accessories</h3>
-                <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm">
-                        ${(model.options_accessories || []).map(item => `
-                            <div class="flex items-start gap-2 py-1">
-                                <i class="fa-solid fa-plus text-orange-400 mt-1"></i>
-                                <span>${item}</span>
+                    <div class="p-8 overflow-y-auto flex-1">
+                        
+                        <!-- Quick Stats -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                            ${quickStatsHTML}
+                        </div>
+
+                        <!-- Full Specifications -->
+                        <h3 class="text-xl font-semibold mb-4 text-slate-300">Full Specifications</h3>
+                        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6 mb-8">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+                                ${renderSpecRows(specs)}
                             </div>
-                        `).join('')}
+                        </div>
+
+                        <!-- Dimensions -->
+                        <h3 class="text-xl font-semibold mb-4 text-slate-300">Dimensions</h3>
+                        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6 mb-8">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div>
+                                    <div class="text-xs text-slate-400">Overall Length</div>
+                                    <div class="text-3xl font-bold text-[#f97316] mt-1">${overallLength}</div>
+                                    <div class="text-xs text-slate-500">in</div>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-slate-400">Overall Width</div>
+                                    <div class="text-3xl font-bold text-[#f97316] mt-1">${overallWidth}</div>
+                                    <div class="text-xs text-slate-500">in</div>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-slate-400">Overall Height</div>
+                                    <div class="text-3xl font-bold text-[#f97316] mt-1">${overallHeight}</div>
+                                    <div class="text-xs text-slate-500">in</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Standard Equipment -->
+                        <h3 class="text-xl font-semibold mb-4 text-slate-300">Standard Equipment</h3>
+                        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6 mb-8">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm">
+                                ${(model.standard_equipment || []).map(item => `
+                                    <div class="flex items-start gap-2 py-1">
+                                        <i class="fa-solid fa-check text-emerald-400 mt-1"></i>
+                                        <span>${item}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <!-- Options & Accessories -->
+                        <h3 class="text-xl font-semibold mb-4 text-slate-300">Options & Accessories</h3>
+                        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm">
+                                ${(model.options_accessories || []).map(item => `
+                                    <div class="flex items-start gap-2 py-1">
+                                        <i class="fa-solid fa-plus text-orange-400 mt-1"></i>
+                                        <span>${item}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="px-8 py-5 border-t border-slate-700 bg-slate-950 flex justify-end">
+                        <button onclick="this.closest('.fixed').remove()" class="px-6 py-2.5 rounded-2xl bg-slate-700 hover:bg-slate-600 text-sm font-medium">Close</button>
                     </div>
                 </div>
-
-            </div>
-
-            <div class="px-8 py-5 border-t border-slate-700 bg-slate-950 flex justify-end">
-                <button onclick="this.closest('.fixed').remove()" class="px-6 py-2.5 rounded-2xl bg-slate-700 hover:bg-slate-600 text-sm font-medium">Close</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-}
+            `;
+            document.body.appendChild(modal);
+        }
 
         function createQuickStat(label, value, unit) {
             if (!value) return '';
